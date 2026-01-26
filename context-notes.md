@@ -13,9 +13,9 @@
 - Health only (0 = dead); no energy costs.
 - One action set per tick: `turn`, `advance`, `scan`, `fire`.
 - Bots use `tick(api)`; API methods:
-  - `scan(fovDeg)` -> `{found, distance, angle, id}` or `{found:false}`
+  - `scan(fovDeg=MAX)` -> `{found, distance, angle, id}` or `{found:false}`
   - `turn(deg)`
-  - `advance(power)` [0..1]
+  - `advance(power=1)` [0..1]
   - `fire()` hitscan
   - `aligned(angleDeg, toleranceDeg=6)` -> boolean
   - `memoryGet(slot)` / `memorySet(slot, value)` -> numeric memory slots (tier 0 = none)

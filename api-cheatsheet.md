@@ -23,10 +23,10 @@ function tick(api) {
 }
 ```
 
-## api.scan(fovDeg)
+## api.scan(fovDeg=MAX)
 Scans for the nearest bot inside a cone in front of you.
 
-- `fovDeg`: field of view in degrees. Wider is easier to find targets.
+- `fovDeg`: field of view in degrees. Default is your max FOV tier.
 - Range is capped by your `sightRangeTier`.
 - FOV is capped by your `sightFovTier`.
 
@@ -40,6 +40,7 @@ Notes:
 
 Example:
 ```js
+let scanResult = api.scan();
 let scanResult = api.scan(60);
 let aligned = api.aligned(scanResult.angle, 10);
 if (scanResult.found === true && aligned) {
@@ -59,16 +60,17 @@ api.turn(8);
 api.turn(-5);
 ```
 
-## api.advance(power)
+## api.advance(power=1)
 Moves forward this tick.
 
-- `power` is in the range `[0, 1]`.
+- `power` is in the range `[0, 1]`, default is `1`.
 - Actual movement speed depends on `maxSpeedTier`.
 
 Example:
 ```js
 api.advance(0.4);
 api.advance(1.0);
+api.advance();
 ```
 
 ## api.fire()
@@ -118,6 +120,22 @@ Stores a number in a memory slot.
 Example:
 ```js
 api.memorySet(0, turns + 1);
+```
+
+## Tick encoder tool
+If you want to paste a multi-line `tick` function into JSON, use:
+`tools/encode-tick.html`
+
+## Local bot-list rebuild (teacher tool)
+If you add bots manually to the `bots/` folder, run:
+```sh
+node tools/rebuild-bot-list.js
+```
+This regenerates `bot-list.json`.
+
+On Windows without Node.js:
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/rebuild-bot-list.ps1
 ```
 
 ## Admin uploads (teacher-only)

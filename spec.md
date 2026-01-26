@@ -24,12 +24,12 @@ function tick(api) {
 ```
 
 API methods:
-- `api.scan(fovDeg)`
+- `api.scan(fovDeg=MAX)`
   - Returns `{ found, distance, angle, id }` or `{ found:false }`.
 - `api.turn(deg)`
   - Sets desired turn for this tick; clamped to bot's max turn rate.
-- `api.advance(power)`
-  - `power` in [0,1]. Sets forward speed; clamped to bot's max speed.
+- `api.advance(power=1)`
+  - `power` in [0,1]. Sets forward speed; default 1.0.
 - `api.fire()`
 - `api.getState()`
   - Read-only: `{ x, y, heading, health, time, alive }`.

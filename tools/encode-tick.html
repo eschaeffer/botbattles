@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BotBattles Tick Encoder</title>
+    <style>
+      :root {
+        --bg: #0c1014;
+        --panel: rgba(22, 28, 36, 0.9);
+        --line: rgba(255, 255, 255, 0.12);
+        --fg: #eef2f6;
+        --muted: #a7b1bc;
+        --accent: #f2b84b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Futura", "Optima", "Segoe UI", sans-serif;
+        color: var(--fg);
+        background: linear-gradient(160deg, var(--bg), #151b22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      main {
+        width: min(1000px, 96vw);
+        display: grid;
+        gap: 16px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 3vw, 2.2rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        display: grid;
+        gap: 10px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 180px;
+        resize: vertical;
+        background: #11161b;
+        color: var(--fg);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "Cascadia Mono", "Consolas", monospace;
+        font-size: 0.9rem;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 9px 16px;
+        font-weight: 600;
+        background: var(--accent);
+        color: #1a1a1a;
+        cursor: pointer;
+      }
+
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Tick Encoder</h1>
+        <p>Paste your formatted tick function and copy the JSON-safe version.</p>
+      </header>
+
+      <section>
+        <label for="input">Pretty tick function</label>
+        <textarea id="input" placeholder="function tick(api) { ... }"></textarea>
+        <div class="row">
+          <button id="encode">Encode</button>
+          <button id="copy" type="button">Copy Output</button>
+        </div>
+      </section>
+
+      <section>
+        <label for="output">JSON-safe string</label>
+        <textarea id="output" readonly></textarea>
+      </section>
+    </main>
+
+    <script>
+      const input = document.getElementById("input");
+      const output = document.getElementById("output");
+      const encodeBtn = document.getElementById("encode");
+      const copyBtn = document.getElementById("copy");
+
+      function encodeTick() {
+        const raw = input.value;
+        output.value = JSON.stringify(raw).slice(1, -1);
+      }
+
+      encodeBtn.addEventListener("click", encodeTick);
+      copyBtn.addEventListener("click", async () => {
+        if (!output.value) {
+          encodeTick();
+        }
+        await navigator.clipboard.writeText(output.value);
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => (copyBtn.textContent = "Copy Output"), 1200);
+      });
+    </script>
+  </body>
+</html>

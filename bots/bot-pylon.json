@@ -1,0 +1,17 @@
+{
+  "name": "PylonBot",
+  "build": {
+    "maxSpeedTier": 1,
+    "turnRateTier": 1,
+    "sightRangeTier": 1,
+    "sightFovTier": 1,
+    "shotPowerTier": 1,
+    "shotSpeedTier": 1,
+    "maxHealthTier": 1,
+    "memoryTier": 0,
+    "wallBehavior": "stop"
+  },
+  "behavior": {
+    "tick": "function tick(api) {\n  // Look for a target in front of us.\n  let scanResult = api.scan(90);\n\n  // If nothing is found, wander.\n  if (scanResult.found === false) {\n    api.turn(5);\n    api.advance(0.4);\n  } else {\n    // Turn toward the target and move in.\n    api.turn(scanResult.angle);\n    api.advance(0.6);\n\n    // Fire when aligned.\n    let aligned = api.aligned(scanResult.angle, 8);\n    if (aligned) {\n      api.fire();\n    }\n  }\n}\n"
+  }
+}

@@ -179,6 +179,9 @@ function setupControls() {
   adminButton.mousePressed(() => {
     window.open("admin/index.html", "_blank", "noopener");
   });
+  if (shouldHideAdmin()) {
+    adminButton.hide();
+  }
 
   const normalizeWrap = createControl(controls, "Normalize Scores");
   normalizeSelect = createSelect();
@@ -537,7 +540,8 @@ function makeApi(bot, dt) {
 }
 
 function doScan(bot, fovDeg) {
-  const fov = clamp(fovDeg, 10, bot.stats.sightFov);
+  const usedFov = fovDeg === undefined ? bot.stats.sightFov : fovDeg;
+  const fov = clamp(usedFov, 10, bot.stats.sightFov);
   const range = bot.stats.sightRange;
   recordScanEffect(bot, fov, range);
 
@@ -560,7 +564,8 @@ function doTurn(bot, deg, tpsScale) {
 }
 
 function doAdvance(bot, power, tpsScale) {
-  const capped = clamp(power, 0, 1);
+  const usedPower = power === undefined ? 1 : power;
+  const capped = clamp(usedPower, 0, 1);
   bot.advanceCmd = max(bot.advanceCmd, capped);
 }
 
@@ -1289,6 +1294,20 @@ function reloadBots() {
     }
     logEvent("Bots reloaded.");
   });
+}
+
+function shouldHideAdmin() {
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    return true;
+  }
+  if (host.startsWith("192.168.") || host.startsWith("10.")) {
+    return true;
+  }
+  if (host.endsWith(".local")) {
+    return true;
+  }
+  return false;
 }
 
 function startBattle() {

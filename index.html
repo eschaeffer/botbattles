@@ -188,6 +188,27 @@
         margin-bottom: 6px;
       }
 
+      #tools-panel {
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: linear-gradient(140deg, var(--card), var(--card-2));
+        border: 1px solid var(--line);
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      #tools-panel a {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      #tools-panel a:hover {
+        text-decoration: underline;
+      }
+
       button {
         appearance: none;
         border: none;
@@ -268,6 +289,10 @@
             <ul id="load-output"></ul>
           </section>
         </aside>
+      </section>
+      <section id="tools-panel">
+        <span>Tools:</span>
+        <a href="tools/encode-tick.html" target="_blank" rel="noopener">Tick Encoder</a>
       </section>
     </main>
 

@@ -1,9 +1,10 @@
-{
-  "bots": [
-    "bots/bot-sample.json",
-    "bots/bot-random.json",
-    "bots/bot-hunter.json",
-    "bots/bot-stalker.json",
-    "bots/bot-scorehawk.json"
-  ]
+﻿{
+    "bots":  [
+                 "bots/bot-hunter.json",
+                 "bots/bot-pylon.json",
+                 "bots/bot-random.json",
+                 "bots/bot-sample.json",
+                 "bots/bot-scorehawk.json",
+                 "bots/bot-stalker.json"
+             ]
 }
