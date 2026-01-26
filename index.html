@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BotBattles Classroom Arena</title>
+    <style>
+      :root {
+        --bg: #0c1014;
+        --bg-2: #141a20;
+        --card: rgba(255, 255, 255, 0.06);
+        --card-2: rgba(255, 255, 255, 0.02);
+        --line: rgba(255, 255, 255, 0.12);
+        --fg: #eef2f6;
+        --muted: #a7b1bc;
+        --accent: #f2b84b;
+        --accent-2: #7fd1ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Futura", "Optima", "Segoe UI", sans-serif;
+        color: var(--fg);
+        background:
+          radial-gradient(800px 400px at 10% 20%, rgba(127, 209, 255, 0.18), transparent 60%),
+          radial-gradient(600px 600px at 90% 10%, rgba(242, 184, 75, 0.15), transparent 60%),
+          linear-gradient(160deg, var(--bg) 20%, var(--bg-2) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      main {
+        width: min(1200px, 96vw);
+        display: grid;
+        gap: 18px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 3vw, 2.4rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .arena-stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      #controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: linear-gradient(140deg, var(--card), var(--card-2));
+        border: 1px solid var(--line);
+      }
+
+      #controls .control {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 0.9rem;
+        min-width: 140px;
+      }
+
+      #controls label {
+        color: var(--muted);
+      }
+
+      #sketch-holder {
+        width: 100%;
+        padding: 12px;
+        border-radius: 18px;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        position: relative;
+        z-index: 1;
+      }
+
+      #sketch-holder canvas {
+        display: block;
+      }
+
+      .side-panel {
+        display: grid;
+        gap: 12px;
+        position: relative;
+        z-index: 2;
+      }
+
+      #log-panel,
+      #load-panel,
+      #score-panel {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 18px;
+        background: linear-gradient(160deg, rgba(22, 28, 36, 0.9), rgba(18, 20, 24, 0.9));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        min-height: 320px;
+      }
+
+      #log-title {
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent-2);
+      }
+
+      #load-title {
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      #score-title {
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #9be28b;
+      }
+
+      #log-output {
+        margin: 0;
+        font-family: "Cascadia Mono", "Consolas", monospace;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: var(--muted);
+        white-space: pre-wrap;
+        overflow-y: auto;
+        max-height: 7em;
+      }
+
+      #load-output {
+        margin: 0;
+        padding-left: 18px;
+        font-family: "Cascadia Mono", "Consolas", monospace;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: var(--muted);
+        overflow-y: auto;
+        max-height: 260px;
+      }
+
+      #load-output li {
+        margin-bottom: 6px;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 9px 14px;
+        font-weight: 600;
+        background: var(--accent);
+        color: #1a1a1a;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: var(--fg);
+        border: 1px solid var(--line);
+      }
+
+      .pulse-attention {
+        position: relative;
+        box-shadow: 0 0 0 rgba(242, 184, 75, 0.6);
+        animation: pulseGlow 1.8s ease-in-out infinite;
+      }
+
+      @keyframes pulseGlow {
+        0% {
+          box-shadow: 0 0 0 rgba(242, 184, 75, 0.0);
+        }
+        50% {
+          box-shadow: 0 0 14px rgba(242, 184, 75, 0.5);
+        }
+        100% {
+          box-shadow: 0 0 0 rgba(242, 184, 75, 0.0);
+        }
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(242, 184, 75, 0.2);
+      }
+
+      .pause-button {
+        min-width: 92px;
+        text-align: center;
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>BotBattles Classroom Arena</h1>
+          <p>AI vs AI battles with health, sensors, and bot design tradeoffs.</p>
+        </div>
+        <div id="controls"></div>
+      </header>
+      <section class="grid">
+        <section class="arena-stack">
+          <section id="sketch-holder"></section>
+          <section id="log-panel">
+            <div id="log-title">Match Log</div>
+            <pre id="log-output"></pre>
+          </section>
+        </section>
+        <aside class="side-panel">
+          <section id="score-panel">
+            <div id="score-title">Scoreboard</div>
+            <ul id="score-output"></ul>
+          </section>
+          <section id="load-panel">
+            <div id="load-title">Bot Load Report</div>
+            <ul id="load-output"></ul>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <script src="sketch.js?v=1"></script>
+  </body>
+</html>
