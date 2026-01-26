@@ -89,11 +89,22 @@
         flex-direction: column;
         gap: 6px;
         font-size: 0.9rem;
-        min-width: 140px;
+        min-width: 120px;
       }
 
       #controls label {
         color: var(--muted);
+      }
+
+      #controls .control select,
+      #controls .control input[type="range"] {
+        max-width: 150px;
+      }
+
+      .btn-break {
+        line-height: 1.1;
+        padding: 9px 12px;
+        white-space: normal;
       }
 
       #sketch-holder {

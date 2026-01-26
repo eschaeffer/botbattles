@@ -149,13 +149,15 @@ function setupControls() {
   stepButton.class("secondary");
   stepButton.mousePressed(stepOnce);
 
-  resetButton = createButton("Reset Match");
+  resetButton = createButton("Reset<br>Match");
   resetButton.parent(controls);
+  resetButton.addClass("btn-break");
   resetButton.mousePressed(resetMatch);
 
-  startButton = createButton("Start Battle");
+  startButton = createButton("Start<br>Battle");
   startButton.parent(controls);
   startButton.attribute("disabled", true);
+  startButton.addClass("btn-break");
   startButton.mousePressed(startBattle);
 
   const botsWrap = createControl(controls, "Bots");
@@ -164,10 +166,11 @@ function setupControls() {
   botSelect.attribute("multiple", true);
   botSelect.attribute("size", 4);
 
-  reloadButton = createButton("Reload Bots");
+  reloadButton = createButton("Reload<br>Bots");
   reloadButton.parent(controls);
   reloadButton.class("secondary");
   reloadButton.addClass("pulse-attention");
+  reloadButton.addClass("btn-break");
   reloadButton.mousePressed(reloadBots);
 
   adminButton = createButton("Admin");
