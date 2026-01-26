@@ -120,6 +120,9 @@ Example:
 api.memorySet(0, turns + 1);
 ```
 
+## Admin uploads (teacher-only)
+If you use the admin page (`/admin/`) on the hosted site, you can upload or delete bot JSON files.
+
 ## api.getState()
 Returns your current state:
 ```js

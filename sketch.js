@@ -76,6 +76,7 @@ let startButton;
 let normalizeSelect;
 let endConditionSelect;
 let botSelect;
+let adminButton;
 let logOutput;
 let loadOutput;
 let scoreOutput;
@@ -168,6 +169,13 @@ function setupControls() {
   reloadButton.class("secondary");
   reloadButton.addClass("pulse-attention");
   reloadButton.mousePressed(reloadBots);
+
+  adminButton = createButton("Admin");
+  adminButton.parent(controls);
+  adminButton.class("secondary");
+  adminButton.mousePressed(() => {
+    window.open("admin/index.html", "_blank", "noopener");
+  });
 
   const normalizeWrap = createControl(controls, "Normalize Scores");
   normalizeSelect = createSelect();
