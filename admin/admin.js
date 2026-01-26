@@ -9,6 +9,7 @@ const listEl = document.getElementById("bot-list");
 const uploadBtn = document.getElementById("upload-btn");
 const refreshBtn = document.getElementById("refresh-btn");
 const fileInput = document.getElementById("file-input");
+const clearTokenBtn = document.getElementById("clear-token-btn");
 
 function getToken() {
   return localStorage.getItem("botbattles_token") || "";
@@ -150,6 +151,11 @@ uploadBtn.addEventListener("click", () => {
 
 refreshBtn.addEventListener("click", () => {
   listBots().catch((err) => setStatus(err.message, true));
+});
+
+clearTokenBtn.addEventListener("click", () => {
+  localStorage.removeItem("botbattles_token");
+  setStatus("Token cleared.", false);
 });
 
 listBots().catch((err) => setStatus(err.message, true));
