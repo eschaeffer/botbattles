@@ -1,0 +1,16 @@
+﻿{
+  "name": "SeekerLite",
+  "color": [80, 200, 255],
+  "build": {
+    "maxSpeedTier": 3,
+    "turnRateTier": 3,
+    "sightRangeTier": 3,
+    "sightFovTier": 3,
+    "shotPowerTier": 3,
+    "shotSpeedTier": 3,
+    "maxHealthTier": 3,
+    "memoryTier": 1,
+    "wallBehavior": "stop"
+  },
+  "behavior": {}
+}

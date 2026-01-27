@@ -91,4 +91,12 @@ Choose one tier per category. Total points must be <= 100.
 - Shot speed 2
 - Max health 100
 - Memory slots 0
+
+## Bot loading (current workflow)
+- Bots are loaded from local files selected in the browser.
+- Use the **Load Bots** panel:
+  - `Select .json Bots` for complete bot configs, or
+  - `Select Bot Folders` where each folder contains one `.json` and `behavior.js`.
+- Then click **Start Battle**.
+- Sample bots live in `sampleBots/` for reference.
 - Wall behavior Stop

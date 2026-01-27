@@ -126,20 +126,41 @@ api.memorySet(0, turns + 1);
 If you want to paste a multi-line `tick` function into JSON, use:
 `tools/encode-tick.html`
 
-## Local bot-list rebuild (teacher tool)
-If you add bots manually to the `bots/` folder, run:
-```sh
-node tools/rebuild-bot-list.js
-```
-This regenerates `bot-list.json`.
+## Loading bots locally (student/teacher)
+Use the **Load Bots** panel on the main page:
+- `Select .json Bots`: load one or more complete bot `.json` files.
+- `Select Bot Folders`: load bot folders where each folder contains:
+  - one bot config `.json` file (no `behavior.tick` needed), and
+  - one `behavior.js` file with the `tick` function code.
 
-On Windows without Node.js:
-```powershell
-powershell -ExecutionPolicy Bypass -File tools/rebuild-bot-list.ps1
+Loaded bots are remembered for the next visit on the same browser.
+Errors show in the **Bot Load Report**. Tips and warnings appear in the **Match Log**.
+If a bot fails to load but a previous version worked, BotBattles will use the last working version and warn you.
+
+### Example bot folder layout
+```text
+MyBot/
+  bot-mybot.json
+  behavior.js
 ```
 
-## Admin uploads (teacher-only)
-If you use the admin page (`/admin/`) on the hosted site, you can upload or delete bot JSON files.
+`behavior.js` should contain your `tick` function, for example:
+```js
+function tick(api) {
+  let scanResult = api.scan();
+  if (scanResult.found) {
+    api.turn(scanResult.angle);
+    if (api.aligned(scanResult.angle)) {
+      api.fire();
+    }
+  } else {
+    api.turn(6);
+    api.advance();
+  }
+}
+```
+
+Tip: drag/drop supports `.json` files; bot folders must be selected with **Select Bot Folders**.
 
 ## api.getState()
 Returns your current state:

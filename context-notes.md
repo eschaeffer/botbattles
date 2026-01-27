@@ -6,8 +6,9 @@
 
 ## Current status
 - p5.js arena scaffold implemented (TPS 5 default, 60 FPS render, interpolation).
-- UI: Pause, Step, TPS slider, Reset Match, win-condition selector.
+- UI: Pause, Step, TPS slider, Reset Match, Start Battle, scoring controls.
 - Logs: Match log + Bot Load Report panel (accepted/rejected bots + reasons).
+- Local bot loading via file picker/drag-drop, plus bot-folder loading (`behavior.js` merge).
 
 ## Rules and API (v1)
 - Health only (0 = dead); no energy costs.
@@ -21,6 +22,7 @@
   - `memoryGet(slot)` / `memorySet(slot, value)` -> numeric memory slots (tier 0 = none)
   - `getState()` -> `{x, y, heading, health, time, alive}`
 - Match: 120s default; win condition selectable (default most health).
+- Match: 120s default; end condition selectable (timer or last bot standing).
 
 ## Files
 - `index.html`: UI layout (arena + log panels + controls).
@@ -31,12 +33,12 @@
 - `bot-sample.json`: Loaded bots. Can be a single object, `{ "bots": [...] }`, or an array.
 
 ## Bot config loading
-- `loadJSON` reads `bot-sample.json` and `bot-schema.json`.
+- Local file picker/drag-drop loads `.json` files.
+- Bot folders can be loaded via a folder picker; each folder needs one `.json` and `behavior.js`.
 - Schema validation with a small in-code validator (no external libs).
 - Behavior tick compiled from string:
   - Prefer `"function tick(api) { ... }"` string.
   - Fallback accepts body-only string.
-- Fallback bots in `sketch.js` if JSON invalid or not loaded.
 
 ## Notes
 - Use a local server to load JSON (e.g., `python -m http.server 8000`).

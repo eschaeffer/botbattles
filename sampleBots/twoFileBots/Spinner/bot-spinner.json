@@ -1,0 +1,16 @@
+﻿{
+  "name": "Spinner",
+  "color": [255, 180, 90],
+  "build": {
+    "maxSpeedTier": 2,
+    "turnRateTier": 5,
+    "sightRangeTier": 2,
+    "sightFovTier": 3,
+    "shotPowerTier": 2,
+    "shotSpeedTier": 2,
+    "maxHealthTier": 3,
+    "memoryTier": 0,
+    "wallBehavior": "bounce"
+  },
+  "behavior": {}
+}

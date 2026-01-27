@@ -1,0 +1,16 @@
+﻿{
+  "name": "OverBudget",
+  "color": [255, 80, 80],
+  "build": {
+    "maxSpeedTier": 5,
+    "turnRateTier": 5,
+    "sightRangeTier": 4,
+    "sightFovTier": 4,
+    "shotPowerTier": 5,
+    "shotSpeedTier": 5,
+    "maxHealthTier": 5,
+    "memoryTier": 4,
+    "wallBehavior": "slide"
+  },
+  "behavior": {}
+}

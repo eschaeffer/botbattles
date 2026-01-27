@@ -10,6 +10,16 @@
       "minLength": 1,
       "maxLength": 40
     },
+    "color": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
     "build": {
       "type": "object",
       "required": [

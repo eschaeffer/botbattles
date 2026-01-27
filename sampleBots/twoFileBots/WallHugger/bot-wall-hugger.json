@@ -1,0 +1,16 @@
+﻿{
+  "name": "WallHugger",
+  "color": [140, 255, 140],
+  "build": {
+    "maxSpeedTier": 3,
+    "turnRateTier": 2,
+    "sightRangeTier": 2,
+    "sightFovTier": 2,
+    "shotPowerTier": 3,
+    "shotSpeedTier": 3,
+    "maxHealthTier": 3,
+    "memoryTier": 1,
+    "wallBehavior": "slide"
+  },
+  "behavior": {}
+}

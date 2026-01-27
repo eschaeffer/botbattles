@@ -188,25 +188,54 @@
         margin-bottom: 6px;
       }
 
-      #tools-panel {
+      #load-output li.load-err {
+        color: #ff9a9a;
+      }
+
+      #load-output li.load-warn {
+        color: #ffd27a;
+      }
+
+      #score-output {
+        margin: 0;
+        padding-left: 18px;
+        font-family: "Cascadia Mono", "Consolas", monospace;
+        font-size: 0.9rem;
+        line-height: 1.45;
+        color: var(--muted);
+        overflow-y: auto;
+        max-height: 260px;
+      }
+
+      #score-output li {
+        margin-bottom: 6px;
+      }
+
+      #score-output li.score-warn {
+        color: #ffd27a;
+      }
+
+      #score-output li.score-err {
+        color: #ff9a9a;
+      }
+
+      #score-output .score-flag {
+        margin-left: 6px;
+        text-decoration: none;
+      }
+
+      #score-output .score-flag.warn {
+        color: #ffd27a;
+      }
+
+      #local-panel {
         padding: 12px 14px;
         border-radius: 16px;
         background: linear-gradient(140deg, var(--card), var(--card-2));
-        border: 1px solid var(--line);
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-
-      #tools-panel a {
-        color: var(--accent-2);
-        text-decoration: none;
-        font-weight: 600;
-      }
-
-      #tools-panel a:hover {
-        text-decoration: underline;
+        border: 1px dashed rgba(127, 209, 255, 0.4);
+        display: grid;
+        gap: 8px;
+        color: var(--muted);
       }
 
       button {
@@ -284,15 +313,19 @@
             <div id="score-title">Scoreboard</div>
             <ul id="score-output"></ul>
           </section>
+          <section id="local-panel">
+            <div><strong>Load Bots</strong></div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button id="local-folder-btn" class="secondary">Select Bot Folders</button>
+              <button id="local-clear-btn" class="secondary">Clear Loaded</button>
+            </div>
+            <input id="local-folder-input" type="file" webkitdirectory multiple hidden />
+          </section>
           <section id="load-panel">
             <div id="load-title">Bot Load Report</div>
             <ul id="load-output"></ul>
           </section>
         </aside>
-      </section>
-      <section id="tools-panel">
-        <span>Tools:</span>
-        <a href="tools/encode-tick.html" target="_blank" rel="noopener">Tick Encoder</a>
       </section>
     </main>
 

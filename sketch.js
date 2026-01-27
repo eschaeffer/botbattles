@@ -4,6 +4,7 @@
 const BASE_TPS = 5;
 const MAX_LOG_LINES = 16;
 const FIRE_COOLDOWN_TICKS = 1;
+const WARNING_CHECK_SECONDS = 6;
 
 const scoring = {
   healthWeight: 2.0,
@@ -51,6 +52,8 @@ const match = {
   normalizeScore: "off",
   lastTickAt: 0,
   accumulator: 0,
+  tickCount: 0,
+  lastWarningCheck: 0,
   lastWinner: null,
   hasStarted: false,
   isOver: false,
@@ -71,21 +74,25 @@ let tpsSlider;
 let pauseButton;
 let stepButton;
 let resetButton;
-let reloadButton;
 let startButton;
 let normalizeSelect;
 let endConditionSelect;
-let botSelect;
-let adminButton;
 let logOutput;
 let loadOutput;
 let scoreOutput;
 let sketchHolderEl;
 let botConfigs = [];
 let botSchema;
-let availableBotFiles = [];
+let localLoadBtn;
+let localFileInput;
+let localFolderBtn;
+let localFolderInput;
+let dropZone;
+let localClearBtn;
 let loadErrors = [];
 let loadReport = [];
+let lastGoodBySource = {};
+let botStatusByName = {};
 
 function preload() {
   const schemaUrl = "bot-schema.json?v=" + Date.now();
@@ -104,6 +111,9 @@ function setup() {
   logOutput = select("#log-output");
   loadOutput = select("#load-output");
   scoreOutput = select("#score-output");
+  loadLastGoodStore();
+  setupLocalLoaders();
+  restoreLocalBotsFromStorage();
 
   match.isPaused = true;
   resetMatch({ silent: true, keepPaused: true });
@@ -160,29 +170,6 @@ function setupControls() {
   startButton.addClass("btn-break");
   startButton.mousePressed(startBattle);
 
-  const botsWrap = createControl(controls, "Bots");
-  botSelect = createSelect();
-  botSelect.parent(botsWrap);
-  botSelect.attribute("multiple", true);
-  botSelect.attribute("size", 4);
-
-  reloadButton = createButton("Reload<br>Bots");
-  reloadButton.parent(controls);
-  reloadButton.class("secondary");
-  reloadButton.addClass("pulse-attention");
-  reloadButton.addClass("btn-break");
-  reloadButton.mousePressed(reloadBots);
-
-  adminButton = createButton("Admin");
-  adminButton.parent(controls);
-  adminButton.class("secondary");
-  adminButton.mousePressed(() => {
-    window.open("admin/index.html", "_blank", "noopener");
-  });
-  if (shouldHideAdmin()) {
-    adminButton.hide();
-  }
-
   const normalizeWrap = createControl(controls, "Normalize Scores");
   normalizeSelect = createSelect();
   normalizeSelect.parent(normalizeWrap);
@@ -224,11 +211,12 @@ function createControl(parentEl, labelText) {
 
 function initBots() {
   bots.length = 0;
+  botStatusByName = {};
   loadErrors.forEach((message) => logEvent(message));
   loadErrors = [];
 
   if (!botConfigs.length) {
-    initFallbackBots();
+    loadReport.push({ name: "Local", ok: false, level: "err", detail: "No bots loaded yet." });
     updateLoadPanel();
     return;
   }
@@ -236,110 +224,60 @@ function initBots() {
   botConfigs.forEach((item) => {
     const config = item.config;
     const source = item.source;
-    const result = validateBotConfig(config);
-    if (!result.ok) {
-      const name = config && config.name ? config.name : "Unnamed bot";
-      const detail = result.errors.join("; ");
-      logEvent("Invalid bot config: " + name + " (" + detail + ")");
-      loadReport.push({ name, ok: false, detail: detail + " [" + source + "]" });
-      return;
-    }
-    const points = calculateBuildPoints(config.build);
-    if (points.total > 100) {
-      const detail = "Over budget: " + points.total + " pts (limit 100)";
-      logEvent("Invalid bot config: " + config.name + " (" + detail + ")");
-      loadReport.push({ name: config.name, ok: false, detail: detail + " [" + source + "]" });
-      return;
-    }
-    const compiled = compileTick(config.behavior.tick);
-    if (!compiled.ok) {
-      logEvent("Bot " + config.name + " code error: " + compiled.error);
+    const evaluated = evaluateBotConfig(config);
+    if (evaluated.ok) {
+      bots.push(makeBot({
+        name: evaluated.name,
+        color: evaluated.color,
+        build: evaluated.build,
+        points: evaluated.points,
+        tick: evaluated.tick,
+      }));
+      setBotStatus(evaluated.name, "ok", "Loaded normally.");
+      saveLastGoodForSource(source, config);
       loadReport.push({
-        name: config.name,
-        ok: false,
-        detail: "Code error: " + compiled.error + " [" + source + "]",
+        name: evaluated.name,
+        ok: true,
+        level: "ok",
+        detail: "Loaded (" + evaluated.points + " pts) [" + source + "]",
       });
       return;
     }
-    bots.push(makeBot({
-      name: config.name,
-      color: config.color || randomBotColor(),
-      build: config.build,
-      points: points.total,
-      tick: compiled.fn,
-    }));
-    loadReport.push({
-      name: config.name,
-      ok: true,
-      detail: "Loaded (" + points.total + " pts) [" + source + "]",
-    });
+
+    const fallback = getLastGoodForSource(source);
+    if (fallback) {
+      const fallbackEval = evaluateBotConfig(fallback);
+      if (fallbackEval.ok) {
+        bots.push(makeBot({
+          name: fallbackEval.name,
+          color: fallbackEval.color,
+          build: fallbackEval.build,
+          points: fallbackEval.points,
+          tick: fallbackEval.tick,
+        }));
+        const warnMsg = "Used last working version. Latest error: " + evaluated.detail;
+        setBotStatus(fallbackEval.name, "warn", warnMsg);
+        logEvent("Fallback: " + fallbackEval.name + " (" + evaluated.detail + ")");
+        loadReport.push({
+          name: fallbackEval.name,
+          ok: true,
+          level: "warn",
+          detail: warnMsg + " [" + source + "]",
+        });
+        return;
+      }
+    }
+
+    const name = evaluated.name;
+    const detail = evaluated.detail;
+    logEvent("Config issue: " + name + " (" + detail + ")");
+    loadReport.push({ name, ok: false, level: "err", detail: detail + " [" + source + "]" });
   });
 
   if (bots.length === 0) {
-    logEvent("No valid bots loaded. Using fallback bots.");
-    initFallbackBots();
+    logEvent("No valid bots loaded.");
   }
   updateLoadPanel();
-}
-
-function initFallbackBots() {
-  bots.push(makeBot({
-    name: "CornerHunter",
-    color: [242, 184, 75],
-    build: {
-      maxSpeedTier: 2,
-      turnRateTier: 3,
-      sightRangeTier: 2,
-      sightFovTier: 3,
-      shotPowerTier: 2,
-      shotSpeedTier: 2,
-      maxHealthTier: 3,
-      wallBehavior: "stop",
-    },
-    tick: function tick(api) {
-      const target = api.scan(90, 200);
-      if (!target.found) {
-        api.turn(6);
-        api.advance(0.45);
-        return;
-      }
-      api.turn(target.angle);
-      api.advance(0.6);
-      if (Math.abs(target.angle) < 6) {
-        api.fire();
-      }
-    },
-  }));
-
-  bots.push(makeBot({
-    name: "Drifter",
-    color: [127, 209, 255],
-    build: {
-      maxSpeedTier: 3,
-      turnRateTier: 2,
-      sightRangeTier: 3,
-      sightFovTier: 2,
-      shotPowerTier: 3,
-      shotSpeedTier: 3,
-      maxHealthTier: 3,
-      wallBehavior: "stop",
-    },
-    tick: function tick(api) {
-      const target = api.scan(60, 280);
-      api.advance(0.7);
-      if (target.found) {
-        api.turn(target.angle * 0.6);
-        if (Math.abs(target.angle) < 10) {
-          api.fire();
-        }
-      } else {
-        api.turn(-4);
-      }
-    },
-  }));
-
-  loadReport.push({ name: "CornerHunter", ok: true, detail: "Fallback bot" });
-  loadReport.push({ name: "Drifter", ok: true, detail: "Fallback bot" });
 }
 
 function resetMatch(options) {
@@ -347,6 +285,8 @@ function resetMatch(options) {
   const keepPaused = options && options.keepPaused;
   match.time = 0;
   match.accumulator = 0;
+  match.tickCount = 0;
+  match.lastWarningCheck = 0;
   match.lastTickAt = millis();
   match.isOver = false;
   if (!keepPaused) {
@@ -358,10 +298,25 @@ function resetMatch(options) {
   }
 
   const bounds = getArenaBounds();
-  const positions = [
-    { x: bounds.x + 70, y: bounds.y + 70, heading: 45 },
-    { x: bounds.x + bounds.w - 70, y: bounds.y + bounds.h - 70, heading: 225 },
-  ];
+  const centerX = bounds.x + bounds.w / 2;
+  const centerY = bounds.y + bounds.h / 2;
+  const edgeInset = 70;
+
+  const spawnPoints = [
+    { x: bounds.x + edgeInset, y: bounds.y + edgeInset },
+    { x: bounds.x + bounds.w - edgeInset, y: bounds.y + edgeInset },
+    { x: bounds.x + bounds.w - edgeInset, y: bounds.y + bounds.h - edgeInset },
+    { x: bounds.x + edgeInset, y: bounds.y + bounds.h - edgeInset },
+    { x: bounds.x + bounds.w / 2, y: bounds.y + edgeInset },
+    { x: bounds.x + bounds.w - edgeInset, y: bounds.y + bounds.h / 2 },
+    { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h - edgeInset },
+    { x: bounds.x + edgeInset, y: bounds.y + bounds.h / 2 },
+  ].map((pt) => {
+    const heading = (degrees(Math.atan2(centerY - pt.y, centerX - pt.x)) + 360) % 360;
+    return { x: pt.x, y: pt.y, heading };
+  });
+
+  const positions = shuffleInPlace(spawnPoints.slice());
 
   bots.forEach((bot, index) => {
     const pos = positions[index % positions.length];
@@ -375,12 +330,15 @@ function resetMatch(options) {
       shotsHit: 0,
       distance: 0,
       engagement: 0,
+      actions: { scan: 0, turn: 0, advance: 0, fire: 0 },
+      lastActionTime: 0,
       lastX: bot.x,
       lastY: bot.y,
     };
     bot.memory = Array.from({ length: bot.stats.memorySlots }, () => 0);
     bot.alive = true;
     bot.disabled = false;
+    bot.warned = new Set();
     bot.prev = { x: bot.x, y: bot.y, heading: bot.heading };
     bot.wallSlow = 1;
     bot.fireCooldown = 0;
@@ -396,6 +354,7 @@ function resetMatch(options) {
 
 function runTick(dt) {
   match.time += dt * (match.tps / BASE_TPS);
+  match.tickCount += 1;
   let timeExpired = false;
   if (match.endCondition === "timer" && match.time >= match.timeLimit) {
     match.isPaused = true;
@@ -434,7 +393,7 @@ function runTick(dt) {
       bot.tick(api);
     } catch (err) {
       bot.disabled = true;
-      logEvent(bot.name + " error: " + err.message);
+      handleBotRuntimeError(bot, err);
     }
   });
 
@@ -452,6 +411,10 @@ function runTick(dt) {
   resolveWallCollisions();
   resolveShots();
   updateEngagementStats(dt);
+  if (match.time - match.lastWarningCheck >= WARNING_CHECK_SECONDS) {
+    checkBotsForWarnings();
+    match.lastWarningCheck = match.time;
+  }
 
   bots.forEach((bot) => {
     if (!bot.alive) {
@@ -518,6 +481,66 @@ function resolveStats(build) {
   };
 }
 
+function statusRank(level) {
+  if (level === "err") {
+    return 2;
+  }
+  if (level === "warn") {
+    return 1;
+  }
+  return 0;
+}
+
+function setBotStatus(name, level, message) {
+  if (!name) {
+    return;
+  }
+  const next = { level: level || "ok", message: message || "" };
+  const current = botStatusByName[name];
+  if (current && statusRank(current.level) > statusRank(next.level)) {
+    return;
+  }
+  botStatusByName[name] = next;
+}
+
+function warnBot(bot, key, message) {
+  if (!bot) {
+    return;
+  }
+  if (!bot.warned) {
+    bot.warned = new Set();
+  }
+  if (bot.warned.has(key)) {
+    return;
+  }
+  bot.warned.add(key);
+  logEvent("Tip (" + bot.name + "): " + message);
+}
+
+function trackAction(bot, action) {
+  if (!bot || !bot.statsData) {
+    return;
+  }
+  if (!bot.statsData.actions) {
+    bot.statsData.actions = { scan: 0, turn: 0, advance: 0, fire: 0 };
+  }
+  bot.statsData.actions[action] = (bot.statsData.actions[action] || 0) + 1;
+  bot.statsData.lastActionTime = match.time;
+}
+
+function handleBotRuntimeError(bot, err) {
+  const message = err && err.message ? err.message : "Unknown error";
+  warnBot(bot, "runtime-error", "tick() stopped due to an error: " + message);
+  setBotStatus(bot.name, "warn", "Runtime error: " + message);
+  loadReport.push({
+    name: bot.name,
+    ok: true,
+    level: "warn",
+    detail: "Disabled at runtime: " + message,
+  });
+  updateLoadPanel();
+}
+
 function makeApi(bot, dt) {
   const tpsScale = dt * BASE_TPS;
   return {
@@ -525,7 +548,7 @@ function makeApi(bot, dt) {
     turn: (deg) => doTurn(bot, deg, tpsScale),
     advance: (power) => doAdvance(bot, power, tpsScale),
     fire: () => doFire(bot),
-    aligned: (angleDeg, toleranceDeg) => doAligned(angleDeg, toleranceDeg),
+    aligned: (angleDeg, toleranceDeg) => doAligned(bot, angleDeg, toleranceDeg),
     memoryGet: (slot) => getMemory(bot, slot),
     memorySet: (slot, value) => setMemory(bot, slot, value),
     getState: () => ({
@@ -540,8 +563,18 @@ function makeApi(bot, dt) {
 }
 
 function doScan(bot, fovDeg) {
-  const usedFov = fovDeg === undefined ? bot.stats.sightFov : fovDeg;
+  trackAction(bot, "scan");
+  let usedFov = fovDeg;
+  if (usedFov === undefined) {
+    usedFov = bot.stats.sightFov;
+  } else if (!Number.isFinite(usedFov)) {
+    warnBot(bot, "scan-nan", "scan(fov) needs a number. Using max FOV.");
+    usedFov = bot.stats.sightFov;
+  }
   const fov = clamp(usedFov, 10, bot.stats.sightFov);
+  if (Number.isFinite(fovDeg) && (fovDeg < 10 || fovDeg > bot.stats.sightFov)) {
+    warnBot(bot, "scan-range", "scan(fov) is clamped to 10.." + bot.stats.sightFov + ".");
+  }
   const range = bot.stats.sightRange;
   recordScanEffect(bot, fov, range);
 
@@ -560,43 +593,81 @@ function doScan(bot, fovDeg) {
 }
 
 function doTurn(bot, deg, tpsScale) {
+  if (!Number.isFinite(deg)) {
+    warnBot(bot, "turn-nan", "turn(deg) needs a number. Turn ignored.");
+    return;
+  }
+  trackAction(bot, "turn");
   bot.turnCmd += deg;
 }
 
 function doAdvance(bot, power, tpsScale) {
-  const usedPower = power === undefined ? 1 : power;
+  let usedPower = power;
+  if (usedPower === undefined) {
+    usedPower = 1;
+  } else if (!Number.isFinite(usedPower)) {
+    warnBot(bot, "advance-nan", "advance(power) needs a number from 0..1. Using 1.");
+    usedPower = 1;
+  }
+  if (Number.isFinite(usedPower) && (usedPower < 0 || usedPower > 1)) {
+    warnBot(bot, "advance-range", "advance(power) is clamped to 0..1.");
+  }
+  trackAction(bot, "advance");
   const capped = clamp(usedPower, 0, 1);
   bot.advanceCmd = max(bot.advanceCmd, capped);
 }
 
 function doFire(bot) {
   if (bot.fireCooldown > 0) {
+    warnBot(bot, "fire-cooldown", "fire() has a short cooldown. Firing too often does nothing.");
     return;
   }
+  trackAction(bot, "fire");
   bot.fireCmd = { power: bot.stats.shotPower, speed: bot.stats.shotSpeed };
   bot.statsData.shotsFired += 1;
   bot.fireCooldown = FIRE_COOLDOWN_TICKS;
 }
 
-function doAligned(angleDeg, toleranceDeg) {
-  const tolerance = toleranceDeg === undefined ? 6 : toleranceDeg;
+function doAligned(bot, angleDeg, toleranceDeg) {
+  if (!Number.isFinite(angleDeg)) {
+    warnBot(bot, "aligned-nan", "aligned(angle) needs a number.");
+    return false;
+  }
+  let tolerance = toleranceDeg;
+  if (tolerance === undefined) {
+    tolerance = 6;
+  } else if (!Number.isFinite(tolerance) || tolerance <= 0) {
+    warnBot(bot, "aligned-tol", "aligned(angle, tolerance) needs a positive number. Using 6.");
+    tolerance = 6;
+  }
   return Math.abs(angleDeg) <= tolerance;
 }
 
 function getMemory(bot, slot) {
+  if (!bot.memory.length) {
+    warnBot(bot, "memory-none", "This bot has no memory slots. Increase memoryTier to use memory.");
+    return 0;
+  }
   const index = Math.floor(slot);
   if (index < 0 || index >= bot.memory.length) {
+    warnBot(bot, "memory-slot", "memory slot out of range. Valid slots: 0.." + (bot.memory.length - 1) + ".");
     return 0;
   }
   return bot.memory[index];
 }
 
 function setMemory(bot, slot, value) {
+  if (!bot.memory.length) {
+    warnBot(bot, "memory-none-set", "This bot has no memory slots. memorySet() ignored.");
+    return;
+  }
   const index = Math.floor(slot);
   if (index < 0 || index >= bot.memory.length) {
+    warnBot(bot, "memory-slot-set", "memory slot out of range. memorySet() ignored.");
     return;
   }
   if (!Number.isFinite(value)) {
+    warnBot(bot, "memory-value", "memorySet(slot, value) needs a number.");
     return;
   }
   bot.memory[index] = value;
@@ -1014,6 +1085,38 @@ function updateEngagementStats(dt) {
   });
 }
 
+function checkBotsForWarnings() {
+  bots.forEach((bot) => {
+    if (!bot.alive || bot.disabled) {
+      return;
+    }
+    const stats = bot.statsData;
+    if (!stats) {
+      return;
+    }
+    const idleTime = match.time - (stats.lastActionTime || 0);
+    if (match.time >= 12 && idleTime >= 12) {
+      warnBot(bot, "inactive-idle", "I have not taken an action in a while. Check your tick() logic.");
+    }
+    if (match.time >= 15 && stats.distance < 25 && stats.shotsFired === 0) {
+      warnBot(bot, "inactive-start", "I am not moving or firing yet. Try advance(), scan(), and fire().");
+    }
+    if (match.time >= 20 && stats.shotsFired >= 8 && stats.shotsHit === 0) {
+      warnBot(bot, "accuracy-low", "Lots of shots but no hits. Try turn(scanResult.angle) before fire().");
+    }
+  });
+}
+
+function escapeHtml(text) {
+  const value = String(text || "");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function computeScore(bot) {
   const accuracy = bot.statsData.shotsFired > 0
     ? bot.statsData.shotsHit / bot.statsData.shotsFired
@@ -1042,17 +1145,26 @@ function updateScoreboard() {
   }
   const rows = bots.map((bot) => {
     const score = computeScore(bot);
+    const status = botStatusByName[bot.name] || { level: "ok", message: "" };
     return {
       name: bot.name,
       score,
       health: bot.health,
       alive: bot.alive,
+      status,
     };
   }).sort((a, b) => b.score - a.score);
 
   const lines = rows.map((row) => {
     const status = row.alive ? "alive" : "out";
-    return `<li>${row.name}: ${row.score.toFixed(1)} (${status}, ${row.health.toFixed(0)} hp)</li>`;
+    const level = row.status.level || "ok";
+    const cls = level === "warn" ? "score-warn" : (level === "err" ? "score-err" : "score-ok");
+    let flag = "";
+    if (level === "warn") {
+      const title = escapeHtml(row.status.message || "See load report.");
+      flag = ` <a class="score-flag warn" href="#load-panel" title="${title}">⚠</a>`;
+    }
+    return `<li class="${cls}">${row.name}: ${row.score.toFixed(1)} (${status}, ${row.health.toFixed(0)} hp)${flag}</li>`;
   });
 
   if (match.isOver && rows.length) {
@@ -1089,8 +1201,10 @@ function updateLoadPanel() {
     return;
   }
   const lines = loadReport.map((item) => {
-    const prefix = item.ok ? "OK" : "ERR";
-    return `<li>${prefix}: ${item.name} - ${item.detail}</li>`;
+    const level = item.level || (item.ok ? "ok" : "err");
+    const prefix = level === "warn" ? "WARN" : (level === "err" ? "ERR" : "OK");
+    const cls = "load-" + level;
+    return `<li class="${cls}">${prefix}: ${item.name} - ${item.detail}</li>`;
   });
   loadOutput.html(lines.join(""));
 }
@@ -1134,6 +1248,16 @@ function clamp(value, minVal, maxVal) {
   return min(max(value, minVal), maxVal);
 }
 
+function shuffleInPlace(items) {
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = items[i];
+    items[i] = items[j];
+    items[j] = tmp;
+  }
+  return items;
+}
+
 function calculateBuildPoints(build) {
   if (!build) {
     return { total: 0 };
@@ -1169,6 +1293,171 @@ function normalizeBotConfigs(data) {
     return data.bots;
   }
   return [data];
+}
+
+function friendlyParseError(err) {
+  if (!err || !err.message) {
+    return "Could not parse JSON.";
+  }
+  const msg = String(err.message);
+  return msg.length > 120 ? msg.slice(0, 117) + "..." : msg;
+}
+
+function summarizeMessages(messages, maxItems) {
+  const limit = maxItems || 3;
+  if (!messages.length) {
+    return "";
+  }
+  const shown = messages.slice(0, limit);
+  const extra = messages.length - shown.length;
+  const tail = extra > 0 ? " (and " + extra + " more)" : "";
+  return shown.join("; ") + tail;
+}
+
+function friendlySchemaMessage(message) {
+  const text = String(message || "");
+  if (text.includes(" is required")) {
+    const path = text.replace(" is required", "");
+    return "Missing: " + path + ".";
+  }
+  if (text.includes(" is not allowed")) {
+    const path = text.replace(" is not allowed", "");
+    return "Remove extra field: " + path + ".";
+  }
+  if (text.includes(" should be integer")) {
+    const path = text.replace(" should be integer", "");
+    return path + " must be a whole number.";
+  }
+  if (text.includes(" should be one of [")) {
+    const parts = text.split(" should be one of ");
+    return parts[0] + " must be one of " + parts[1] + ".";
+  }
+  if (text.includes(" should be ")) {
+    const parts = text.split(" should be ");
+    return parts[0] + " has the wrong type (" + parts[1] + ").";
+  }
+  if (text.includes(" below minimum") || text.includes(" above maximum")) {
+    const path = text.replace(" below minimum", "").replace(" above maximum", "");
+    return path + " is out of range.";
+  }
+  return text;
+}
+
+function formatSchemaErrors(errors) {
+  const friendly = errors.map(friendlySchemaMessage);
+  return summarizeMessages(friendly, 3);
+}
+
+function validateBuildRanges(build) {
+  const errors = [];
+  if (!build || typeof build !== "object") {
+    errors.push("Missing: build.");
+    return errors;
+  }
+
+  const checks = [
+    { key: "maxSpeedTier", min: 1, max: tiers.maxSpeed.length },
+    { key: "turnRateTier", min: 1, max: tiers.turnRate.length },
+    { key: "sightRangeTier", min: 1, max: tiers.sightRange.length },
+    { key: "sightFovTier", min: 1, max: tiers.sightFov.length },
+    { key: "shotPowerTier", min: 1, max: tiers.shotPower.length },
+    { key: "shotSpeedTier", min: 1, max: tiers.shotSpeed.length },
+    { key: "maxHealthTier", min: 1, max: tiers.maxHealth.length },
+    { key: "memoryTier", min: 0, max: tiers.memorySlots.length - 1 },
+  ];
+
+  checks.forEach((check) => {
+    const value = build[check.key];
+    const label = "build." + check.key;
+    if (value === undefined || value === null) {
+      errors.push("Missing: " + label + ".");
+      return;
+    }
+    if (!Number.isInteger(value)) {
+      errors.push(label + " must be a whole number.");
+      return;
+    }
+    if (value < check.min || value > check.max) {
+      errors.push(label + " must be " + check.min + ".." + check.max + ".");
+    }
+  });
+
+  const wallBehavior = build.wallBehavior;
+  if (!wallBehavior) {
+    errors.push("Missing: build.wallBehavior.");
+  } else if (!(wallBehavior in costs.wallBehavior)) {
+    errors.push("build.wallBehavior must be stop, bounce, or slide.");
+  }
+
+  return errors;
+}
+
+function validateTickSource(config) {
+  const errors = [];
+  const behavior = config && config.behavior;
+  if (!behavior || typeof behavior !== "object") {
+    errors.push("Missing: behavior.tick.");
+    return errors;
+  }
+  const tick = behavior.tick;
+  if (typeof tick !== "string") {
+    errors.push("behavior.tick must be a string.");
+    return errors;
+  }
+  if (!tick.trim()) {
+    errors.push("behavior.tick is empty.");
+  }
+  return errors;
+}
+
+function formatCompileError(errorText) {
+  const message = String(errorText || "Unknown error");
+  if (message.includes("Unexpected token")) {
+    return "Syntax error: " + message + ".";
+  }
+  if (message.includes("Unexpected identifier")) {
+    return "Syntax error: " + message + ".";
+  }
+  return "tick() code error: " + message + ".";
+}
+
+function evaluateBotConfig(config) {
+  const name = config && config.name ? config.name : "Unnamed bot";
+  const sourceColor = config && config.color ? config.color : randomBotColor();
+
+  const schemaResult = validateBotConfig(config);
+  if (!schemaResult.ok) {
+    return { ok: false, name, detail: formatSchemaErrors(schemaResult.errors) };
+  }
+
+  const buildErrors = validateBuildRanges(config.build);
+  if (buildErrors.length) {
+    return { ok: false, name, detail: summarizeMessages(buildErrors, 3) };
+  }
+
+  const points = calculateBuildPoints(config.build);
+  if (points.total > 100) {
+    return { ok: false, name, detail: "Point budget exceeded: " + points.total + "/100." };
+  }
+
+  const tickErrors = validateTickSource(config);
+  if (tickErrors.length) {
+    return { ok: false, name, detail: summarizeMessages(tickErrors, 2) };
+  }
+
+  const compiled = compileTick(config.behavior.tick);
+  if (!compiled.ok) {
+    return { ok: false, name, detail: formatCompileError(compiled.error) };
+  }
+
+  return {
+    ok: true,
+    name,
+    color: sourceColor,
+    build: config.build,
+    points: points.total,
+    tick: compiled.fn,
+  };
 }
 
 function validateBotConfig(config) {
@@ -1278,11 +1567,310 @@ function compileTick(code) {
   }
 }
 
-function reloadBots() {
-  if (reloadButton) {
-    reloadButton.removeClass("pulse-attention");
+function setupLocalLoaders() {
+  localLoadBtn = select("#local-load-btn");
+  localFileInput = select("#local-file-input");
+  localFolderBtn = select("#local-folder-btn");
+  localFolderInput = select("#local-folder-input");
+  dropZone = select("#drop-zone");
+  localClearBtn = select("#local-clear-btn");
+
+  if (localLoadBtn && localFileInput) {
+    localLoadBtn.mousePressed(() => localFileInput.elt.click());
+    localFileInput.elt.addEventListener("change", (event) => {
+      const files = Array.from(event.target.files || []);
+      loadLocalBotFiles(files);
+      event.target.value = "";
+    });
   }
-  startBotLoad(() => {
+
+  if (localFolderBtn && localFolderInput) {
+    localFolderBtn.mousePressed(() => localFolderInput.elt.click());
+    localFolderInput.elt.addEventListener("change", (event) => {
+      const files = Array.from(event.target.files || []);
+      loadBotFolders(files);
+      event.target.value = "";
+    });
+  }
+
+  if (localClearBtn) {
+    localClearBtn.mousePressed(clearLoadedBots);
+  }
+
+  if (dropZone) {
+    dropZone.elt.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropZone.addClass("active");
+    });
+    dropZone.elt.addEventListener("dragleave", () => {
+      dropZone.removeClass("active");
+    });
+    dropZone.elt.addEventListener("drop", (event) => {
+      event.preventDefault();
+      dropZone.removeClass("active");
+      const files = Array.from(event.dataTransfer.files || []);
+      loadLocalBotFiles(files);
+    });
+  }
+}
+
+function loadLocalBotFiles(files) {
+  loadReport = [];
+  botConfigs = [];
+  const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
+  if (!jsonFiles.length) {
+    loadReport.push({ name: "Local", ok: false, level: "err", detail: "No .json files selected." });
+    updateLoadPanel();
+    return;
+  }
+  let pending = jsonFiles.length;
+  jsonFiles.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const configs = normalizeBotConfigs(data);
+        if (!configs.length) {
+          loadReport.push({
+            name: file.name,
+            ok: false,
+            level: "err",
+            detail: "No bots found in that JSON file.",
+          });
+        } else {
+          configs.forEach((config) => {
+            botConfigs.push({ config, source: file.name });
+          });
+        }
+      } catch (err) {
+        loadReport.push({
+          name: file.name,
+          ok: false,
+          level: "err",
+          detail: "Invalid JSON: " + friendlyParseError(err),
+        });
+      }
+      pending -= 1;
+      if (pending === 0) {
+        finalizeLocalLoad();
+      }
+    };
+    reader.onerror = () => {
+      loadReport.push({ name: file.name, ok: false, level: "err", detail: "File read failed." });
+      pending -= 1;
+      if (pending === 0) {
+        finalizeLocalLoad();
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("File read failed"));
+    reader.readAsText(file);
+  });
+}
+
+function groupFilesByFolder(files) {
+  const groups = new Map();
+  files.forEach((file) => {
+    const relPath = file.webkitRelativePath || file.name;
+    const parts = relPath.split("/");
+    if (parts.length <= 1) {
+      const rootKey = "_root";
+      if (!groups.has(rootKey)) {
+        groups.set(rootKey, []);
+      }
+      groups.get(rootKey).push(file);
+      return;
+    }
+    let folderParts = parts.slice(0, -1);
+    // Drop the selected root folder when nested bot folders are used.
+    if (folderParts.length > 1) {
+      folderParts = folderParts.slice(1);
+    }
+    const folder = folderParts.join("/") || folderParts[0] || "_root";
+    if (!groups.has(folder)) {
+      groups.set(folder, []);
+    }
+    groups.get(folder).push(file);
+  });
+  return groups;
+}
+
+async function processBotFolder(folder, files) {
+  const jsonFile = files.find((file) => file.name.toLowerCase().endsWith(".json"));
+  const behaviorFile = files.find((file) => file.name.toLowerCase() === "behavior.js");
+
+  if (!jsonFile || !behaviorFile) {
+    loadReport.push({
+      name: folder,
+      ok: false,
+      level: "err",
+      detail: "Need one .json bot file and behavior.js",
+    });
+    return;
+  }
+
+  try {
+    const [jsonText, behaviorText] = await Promise.all([readFileText(jsonFile), readFileText(behaviorFile)]);
+    const data = JSON.parse(jsonText);
+    const configs = normalizeBotConfigs(data);
+    if (!configs.length) {
+      loadReport.push({ name: folder, ok: false, level: "err", detail: "No bots found in the folder JSON." });
+      return;
+    }
+    configs.forEach((config) => {
+      if (!config.behavior || typeof config.behavior !== "object") {
+        config.behavior = {};
+      }
+      config.behavior.tick = behaviorText;
+      botConfigs.push({ config, source: folder });
+    });
+    loadReport.push({
+      name: folder,
+      ok: true,
+      level: "ok",
+      detail: "Loaded bot folder (" + configs.length + ")",
+    });
+  } catch (err) {
+    loadReport.push({
+      name: folder,
+      ok: false,
+      level: "err",
+      detail: "Invalid folder JSON: " + friendlyParseError(err),
+    });
+  }
+}
+
+async function loadBotFolders(files) {
+  loadReport = [];
+  botConfigs = [];
+  if (!files || files.length === 0) {
+    loadReport.push({ name: "Folders", ok: false, level: "err", detail: "No folders selected." });
+    updateLoadPanel();
+    return;
+  }
+
+  const groups = groupFilesByFolder(files);
+  if (!groups.size) {
+    loadReport.push({ name: "Folders", ok: false, level: "err", detail: "No bot folders found." });
+    updateLoadPanel();
+    return;
+  }
+
+  const tasks = [];
+  groups.forEach((folderFiles, folder) => {
+    tasks.push(processBotFolder(folder, folderFiles));
+  });
+
+  try {
+    await Promise.all(tasks);
+  } catch (err) {
+    loadReport.push({ name: "Folders", ok: false, level: "err", detail: "Folder load failed." });
+  }
+
+  finalizeLocalLoad();
+}
+
+function finalizeLocalLoad() {
+  initBots();
+  resetMatch({ silent: true, keepPaused: true });
+  match.isPaused = true;
+  match.hasStarted = false;
+  pauseButton.html("Resume");
+  pauseButton.attribute("disabled", true);
+  if (startButton) {
+    startButton.removeAttribute("disabled");
+  }
+  saveLocalBotsToStorage();
+  logEvent("Local bots loaded.");
+}
+
+function deepCopy(value) {
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (err) {
+    return value;
+  }
+}
+
+function saveLocalBotsToStorage() {
+  try {
+    const payload = botConfigs.map((item) => ({
+      config: item.config,
+      source: item.source,
+    }));
+    localStorage.setItem("botbattles_local_bots", JSON.stringify(payload));
+  } catch (err) {
+    // Ignore storage errors (quota, privacy mode).
+  }
+}
+
+function loadLastGoodStore() {
+  try {
+    const raw = localStorage.getItem("botbattles_last_good") || "";
+    if (!raw) {
+      lastGoodBySource = {};
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      lastGoodBySource = {};
+      return;
+    }
+    lastGoodBySource = parsed;
+  } catch (err) {
+    lastGoodBySource = {};
+  }
+}
+
+function saveLastGoodStore() {
+  try {
+    localStorage.setItem("botbattles_last_good", JSON.stringify(lastGoodBySource));
+  } catch (err) {
+    // Ignore storage errors.
+  }
+}
+
+function getLastGoodForSource(source) {
+  if (!source || !lastGoodBySource[source]) {
+    return null;
+  }
+  return deepCopy(lastGoodBySource[source]);
+}
+
+function saveLastGoodForSource(source, config) {
+  if (!source || !config) {
+    return;
+  }
+  lastGoodBySource[source] = deepCopy(config);
+  saveLastGoodStore();
+}
+
+function restoreLocalBotsFromStorage() {
+  let raw = "";
+  try {
+    raw = localStorage.getItem("botbattles_local_bots") || "";
+  } catch (err) {
+    raw = "";
+  }
+  if (!raw) {
+    return;
+  }
+  try {
+    const payload = JSON.parse(raw);
+    if (!Array.isArray(payload) || payload.length === 0) {
+      return;
+    }
+    botConfigs = payload
+      .filter((item) => item && item.config)
+      .map((item) => ({ config: item.config, source: item.source || "localStorage" }));
+    loadReport = [{ name: "Local", ok: true, level: "ok", detail: "Restored from previous session." }];
     initBots();
     resetMatch({ silent: true, keepPaused: true });
     match.isPaused = true;
@@ -1292,22 +1880,28 @@ function reloadBots() {
     if (startButton) {
       startButton.removeAttribute("disabled");
     }
-    logEvent("Bots reloaded.");
-  });
+    updateLoadPanel();
+  } catch (err) {
+    // Ignore bad storage data.
+  }
 }
 
-function shouldHideAdmin() {
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") {
-    return true;
+function clearLoadedBots() {
+  bots.length = 0;
+  botConfigs = [];
+  loadReport = [{ name: "Local", ok: true, level: "ok", detail: "Cleared loaded bots." }];
+  try {
+    localStorage.removeItem("botbattles_local_bots");
+  } catch (err) {
+    // Ignore storage errors.
   }
-  if (host.startsWith("192.168.") || host.startsWith("10.")) {
-    return true;
-  }
-  if (host.endsWith(".local")) {
-    return true;
-  }
-  return false;
+  resetMatch({ silent: true, keepPaused: true });
+  match.isPaused = true;
+  match.hasStarted = false;
+  pauseButton.html("Resume");
+  pauseButton.attribute("disabled", true);
+  updateLoadPanel();
+  updateScoreboard();
 }
 
 function startBattle() {
@@ -1332,104 +1926,6 @@ function randomBotColor() {
     [248, 113, 113],
   ];
   return palette[Math.floor(Math.random() * palette.length)];
-}
-
-function startBotLoad(done) {
-  loadReport = [];
-  const listUrl = "bot-list.json?v=" + Date.now();
-  loadJSON(listUrl, (list) => {
-    const files = normalizeBotList(list);
-    if (!files.length) {
-      loadErrors.push("bot-list.json has no bot files. Using fallback bots.");
-      botConfigs = [];
-      done();
-      return;
-    }
-    availableBotFiles = files;
-    updateBotSelect(files);
-    const selected = getSelectedBotFiles();
-    if (!selected.length) {
-      loadReport.push({ name: "Bots", ok: false, detail: "No bots selected." });
-      botConfigs = [];
-      done();
-      return;
-    }
-    loadBotsByFiles(selected, done);
-  }, () => {
-    loadErrors.push("Failed to load bot-list.json. Trying bot-sample.json.");
-    loadBotsByFiles(["bot-sample.json"], done);
-  });
-}
-
-function updateBotSelect(files) {
-  if (!botSelect) {
-    return;
-  }
-  const existing = Array.from(botSelect.elt.options).map((opt) => opt.value);
-  const needsReset = existing.length !== files.length || existing.some((value, index) => value !== files[index]);
-  if (!needsReset) {
-    return;
-  }
-  botSelect.elt.innerHTML = "";
-  files.forEach((file) => {
-    botSelect.option(file);
-  });
-  Array.from(botSelect.elt.options).forEach((option) => {
-    option.selected = true;
-  });
-}
-
-function getSelectedBotFiles() {
-  if (!botSelect) {
-    return [];
-  }
-  const selected = Array.from(botSelect.elt.selectedOptions).map((opt) => opt.value);
-  return selected;
-}
-
-function normalizeBotList(list) {
-  if (!list) {
-    return [];
-  }
-  if (Array.isArray(list)) {
-    return list;
-  }
-  if (Array.isArray(list.bots)) {
-    return list.bots;
-  }
-  return [];
-}
-
-function loadBotsByFiles(files, done) {
-  botConfigs = [];
-  let pending = files.length;
-  if (!pending) {
-    done();
-    return;
-  }
-  files.forEach((file) => {
-    const cacheBust = file + "?v=" + Date.now();
-    loadJSON(cacheBust, (data) => {
-      const configs = normalizeBotConfigs(data);
-      if (!configs.length) {
-        loadReport.push({ name: file, ok: false, detail: "No bots in file [" + file + "]" });
-      } else {
-        configs.forEach((config) => {
-          botConfigs.push({ config, source: file });
-        });
-      }
-      pending -= 1;
-      if (pending === 0) {
-        done();
-      }
-    }, () => {
-      loadReport.push({ name: file, ok: false, detail: "Failed to load file [" + file + "]" });
-      pending -= 1;
-      if (pending === 0) {
-        done();
-      }
-    });
-  });
 }
 
 function normalizeAngle(angle) {
