@@ -8,7 +8,7 @@
 - p5.js arena scaffold implemented (TPS 5 default, 60 FPS render, interpolation).
 - UI: Pause, Step, TPS slider, Reset Match, Start Battle, scoring controls.
 - Logs: Match log + Bot Load Report panel (accepted/rejected bots + reasons).
-- Local bot loading via file picker/drag-drop, plus bot-folder loading (`behavior.js` merge).
+- Local bot loading via bot folders (`behavior.js` merged into JSON at load).
 
 ## Rules and API (v1)
 - Health only (0 = dead); no energy costs.
@@ -21,7 +21,6 @@
   - `aligned(angleDeg, toleranceDeg=6)` -> boolean
   - `memoryGet(slot)` / `memorySet(slot, value)` -> numeric memory slots (tier 0 = none)
   - `getState()` -> `{x, y, heading, health, time, alive}`
-- Match: 120s default; win condition selectable (default most health).
 - Match: 120s default; end condition selectable (timer or last bot standing).
 
 ## Files
@@ -29,12 +28,10 @@
 - `sketch.js`: Engine + UI controls + bots + validation.
 - `spec.md`: Full spec including build tiers, costs, timing model.
 - `bot-schema.json`: JSON schema for bot config.
-- `bot-template.js`: Sample bot tick function.
-- `bot-sample.json`: Loaded bots. Can be a single object, `{ "bots": [...] }`, or an array.
+- `sampleBots/`: reference bots (good examples + error demos).
 
 ## Bot config loading
-- Local file picker/drag-drop loads `.json` files.
-- Bot folders can be loaded via a folder picker; each folder needs one `.json` and `behavior.js`.
+- Bot folders are loaded via a folder picker; each bot folder needs one `.json` and `behavior.js`.
 - Schema validation with a small in-code validator (no external libs).
 - Behavior tick compiled from string:
   - Prefer `"function tick(api) { ... }"` string.

@@ -15,7 +15,6 @@ BotBattles is a browser-based, p5.js arena where student-coded bots battle each 
 - `index.html`: main UI + styles.
 - `sketch.js`: engine, rendering, bot API, scoring, load workflow.
 - `sampleBots/`: sample/reference bots and folders:
-  - `sampleBots/singleFileBots/` (legacy single-file examples)
   - `sampleBots/twoFileBots/` (current two-file examples)
   - `sampleBots/failedBotExamples/` (intentional error demos)
 - `bot-schema.json`: JSON schema for config validation.
@@ -111,7 +110,6 @@ Memory tier cost: [0,3,7,12,18]; slots: [0,1,2,3,4]
 
 ## Bot Examples
 Located in `sampleBots/`:
-- `singleFileBots/` contains legacy single-file JSON bots.
 - `twoFileBots/` contains good two-file bots:
   - `SeekerLite`, `Spinner`, `WallHugger`, `Patroller`, `SniperSimple`
 - `failedBotExamples/` contains intentional error demos:

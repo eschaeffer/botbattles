@@ -122,15 +122,10 @@ Example:
 api.memorySet(0, turns + 1);
 ```
 
-## Tick encoder tool
-If you want to paste a multi-line `tick` function into JSON, use:
-`tools/encode-tick.html`
-
 ## Loading bots locally (student/teacher)
 Use the **Load Bots** panel on the main page:
-- `Select .json Bots`: load one or more complete bot `.json` files.
 - `Select Bot Folders`: load bot folders where each folder contains:
-  - one bot config `.json` file (no `behavior.tick` needed), and
+  - one bot config `.json` file, and
   - one `behavior.js` file with the `tick` function code.
 
 Loaded bots are remembered for the next visit on the same browser.
@@ -159,8 +154,6 @@ function tick(api) {
   }
 }
 ```
-
-Tip: drag/drop supports `.json` files; bot folders must be selected with **Select Bot Folders**.
 
 ## api.getState()
 Returns your current state:
