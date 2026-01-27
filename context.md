@@ -5,28 +5,34 @@ BotBattles is a browser-based, p5.js arena where student-coded bots battle each 
 
 ## Current Status (Working)
 - Main UI works: arena, controls, match log, scoreboard, bot load report.
-- Bots load from local files (either complete `.json` bots, or bot folders with `behavior.js`).
-- Tick encoder tool available at `tools/encode-tick.html`.
+- Bots load from local bot folders (`.json` + `behavior.js`).
 - GitHub Pages hosting is live and functioning.
 - Bot behavior is stable; UI is polished; scan and fire visuals are in place.
+- Friendly student-facing errors/warnings are now implemented.
 
 ## Core Architecture
 ### Files
 - `index.html`: main UI + styles.
 - `sketch.js`: engine, rendering, bot API, scoring, load workflow.
-- `sampleBots/*.json`: sample/reference bot configs.
+- `sampleBots/`: sample/reference bots and folders:
+  - `sampleBots/singleFileBots/` (legacy single-file examples)
+  - `sampleBots/twoFileBots/` (current two-file examples)
+  - `sampleBots/failedBotExamples/` (intentional error demos)
 - `bot-schema.json`: JSON schema for config validation.
 - `api-cheatsheet.md`: student‑facing API reference.
 - `spec.md`: formal spec.
-- `tools/encode-tick.html`: tick encoder helper page.
 
 ### Bot Loading
-- Local file picker or drag‑drop loads complete `.json` files into memory.
-- New option: **Select Bot Folders** loads folders that contain:
+- Use **Select Bot Folders** to load bots.
+- Each bot folder must contain:
   - one bot config `.json` file, and
   - one `behavior.js` file (merged into `behavior.tick` at load time).
+- Recommended workflow: place multiple bot folders under one parent folder, then select the parent.
+- The folder loader now groups by nested folder name (works with parent folders like `twoFileBots/`).
 - Bots are validated against `bot-schema.json`.
-- If invalid, errors appear in Bot Load Report.
+- If invalid, friendly errors appear in Bot Load Report.
+- Tips and warnings appear in the Match Log.
+- Last-known-good fallback per source: if a new load fails, the previous working version is used (with WARN).
 - `Start Battle` begins match (sim does NOT auto-start).
 
 ### Deployment
@@ -36,7 +42,7 @@ Two supported paths:
    - Edit sample bots directly in `sampleBots/`
 2) GitHub Pages:
    - Repo is public
-   - Bots are loaded via local file picker/drag‑drop in the browser.
+   - Bots are loaded via local folder selection in the browser.
 
 ## Bot API (current)
 Inside `tick(api)`:
@@ -58,11 +64,13 @@ Notes:
 - Shots reduce health; dead at 0.
 - Fire cooldown: 1 tick.
 - Stop wall behavior stuns bot for 2 ticks; 3‑tick immunity afterward.
+- Spawn system: 8 possible spawn points (corners + side midpoints), randomized per match, all facing center.
 - Scan cone visual: translucent pulse.
 - Shot visual: tracer line + spark.
 - TPS slider scales entire sim speed + clock.
 - Scoring: weighted sum of health, damage (accuracy‑weighted), engagement time, distance (capped).
 - Normalize Scores toggle: off / strict / gentle.
+- Bot status highlighting: WARN/ERR now reflected in Bot Load Report and Scoreboard.
 
 ## Scoring Details
 ```
@@ -96,20 +104,18 @@ Memory tier cost: [0,3,7,12,18]; slots: [0,1,2,3,4]
 - Step
 - Reset Match
 - Start Battle (disabled until bots reloaded)
-- Load Bots panel (`Select .json Bots` + `Select Bot Folders` + drag‑drop)
+- Load Bots panel (`Select Bot Folders` + `Clear Loaded`)
 - Normalize Scores (off/strict/gentle)
 - Match End On (timer/last bot standing)
 - TPS slider
-- Tools section on main page (Tick Encoder link)
 
 ## Bot Examples
 Located in `sampleBots/`:
-- `bot-sample.json` (CornerHunter)
-- `bot-random.json` (WanderSpark)
-- `bot-hunter.json` (Sharpshade)
-- `bot-stalker.json` (StalkerX)
-- `bot-scorehawk.json` (ScoreHawk)
-- `bot-pylon.json` (PylonBot)
+- `singleFileBots/` contains legacy single-file JSON bots.
+- `twoFileBots/` contains good two-file bots:
+  - `SeekerLite`, `Spinner`, `WallHugger`, `Patroller`, `SniperSimple`
+- `failedBotExamples/` contains intentional error demos:
+  - `BrokenJson`, `MissingField`, `RangeError`, `OverBudget`, `TickRuntime`
 
 All examples use beginner‑friendly syntax (no `const`, no `!`, no early `return`).
 
@@ -122,8 +128,11 @@ All examples use beginner‑friendly syntax (no `const`, no `!`, no early `retur
 - Enabled GitHub Pages hosting.
 - Adjusted TPS so sim speed and clock scale together.
 - Added match-end banner to scoreboard.
-- Added tick encoder tool for JSON-safe code strings.
 - Added scan/advance defaults and aligned helper.
+- Moved to folder-based loading and removed JSON drag/drop and Tools panel.
+- Implemented friendly errors/warnings, bot status highlighting, and last-known-good fallback.
+- Updated schema to allow top-level `color`.
+- Added randomized 8-point spawn system facing center.
 
 ## Known Gotchas / Notes
 - Local bots are remembered in localStorage per browser.
