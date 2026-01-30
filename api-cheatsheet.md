@@ -77,25 +77,30 @@ api.advance();
 Fires a hitscan shot in your current heading.
 
 - Damage is based on your `shotPowerTier`.
-- Range is based on your `shotSpeedTier`.
+- Range is based on your `shotRangeTier`.
 - Hits the first bot in the line of fire.
 - Cooldown: one shot every 1 tick.
 
 Hitscan range formula (current engine):
-- `range = 140 + shotSpeedTier * 60`
+- `range = 140 + shotRangeTier * 60`
 
 Example:
 ```js
 api.fire();
 ```
 
-## api.aligned(angleDeg, toleranceDeg=6)
-Returns `true` if a target angle is within the given tolerance.
+## api.aligned(targetOrAngle, toleranceDeg=6)
+Returns `true` if a target is within the given tolerance.
 
-- `angleDeg`: the angle you got from `scanResult.angle`.
+- Pass a **scan result** (recommended), or an **angle** in degrees.
 - `toleranceDeg`: optional, defaults to 6 degrees.
 
-Example:
+Examples:
+```js
+let scanResult = api.scan();
+let aligned = api.aligned(scanResult, 8);
+```
+
 ```js
 let aligned = api.aligned(scanResult.angle, 8);
 ```

@@ -21,7 +21,7 @@ const tiers = {
   sightRange: [120, 200, 280, 360],
   sightFov: [30, 60, 120, 180],
   shotPower: [2, 4, 6, 8, 10],
-  shotSpeed: [1, 2, 3, 4, 5],
+  shotRange: [1, 2, 3, 4, 5],
   maxHealth: [100, 140, 180, 220, 260],
   memorySlots: [0, 1, 2, 3, 4],
 };
@@ -32,7 +32,7 @@ const costs = {
   sightRange: [0, 6, 14, 24],
   sightFov: [0, 6, 14, 24],
   shotPower: [0, 6, 14, 24, 36],
-  shotSpeed: [0, 4, 10, 18, 28],
+  shotRange: [0, 4, 10, 18, 28],
   maxHealth: [0, 8, 18, 30, 45],
   memorySlots: [0, 3, 7, 12, 18],
   wallBehavior: {
@@ -50,6 +50,7 @@ const match = {
   timeLimit: 120,
   endCondition: "timer",
   normalizeScore: "off",
+  budget: 100,
   lastTickAt: 0,
   accumulator: 0,
   tickCount: 0,
@@ -181,6 +182,18 @@ function setupControls() {
     match.normalizeScore = normalizeSelect.value();
   });
 
+  const budgetWrap = createControl(controls, "Build Budget");
+  const budgetSelect = createSelect();
+  budgetSelect.parent(budgetWrap);
+  [100, 120, 140, 160, 180, 200].forEach((value) => {
+    budgetSelect.option(String(value));
+  });
+  budgetSelect.selected(String(match.budget));
+  budgetSelect.changed(() => {
+    match.budget = Number(budgetSelect.value());
+    logEvent("Budget set to " + match.budget + " points.");
+  });
+
   const endWrap = createControl(controls, "Match End On");
   endConditionSelect = createSelect();
   endConditionSelect.parent(endWrap);
@@ -192,7 +205,7 @@ function setupControls() {
     logEvent("Match end set to " + match.endCondition + ".");
   });
 
-  const tpsWrap = createControl(controls, "TPS");
+  const tpsWrap = createControl(controls, "Sim Speed");
   tpsSlider = createSlider(1, 20, BASE_TPS, 1);
   tpsSlider.parent(tpsWrap);
   tpsSlider.input(() => {
@@ -342,6 +355,7 @@ function resetMatch(options) {
     bot.prev = { x: bot.x, y: bot.y, heading: bot.heading };
     bot.wallSlow = 1;
     bot.fireCooldown = 0;
+    bot.scanCooldown = 0;
     bot.stunTicks = 0;
     bot.stunImmunity = 0;
   });
@@ -376,6 +390,9 @@ function runTick(dt) {
     bot.fireCmd = null;
     if (bot.fireCooldown > 0) {
       bot.fireCooldown -= 1;
+    }
+    if (bot.scanCooldown > 0) {
+      bot.scanCooldown -= 1;
     }
     if (bot.stunImmunity > 0) {
       bot.stunImmunity -= 1;
@@ -474,7 +491,7 @@ function resolveStats(build) {
     sightRange: tiers.sightRange[build.sightRangeTier - 1],
     sightFov: tiers.sightFov[build.sightFovTier - 1],
     shotPower: tiers.shotPower[build.shotPowerTier - 1],
-    shotSpeed: tiers.shotSpeed[build.shotSpeedTier - 1],
+    shotRange: tiers.shotRange[build.shotRangeTier - 1],
     maxHealth: tiers.maxHealth[build.maxHealthTier - 1],
     memorySlots: tiers.memorySlots[build.memoryTier],
     wallBehavior: build.wallBehavior,
@@ -548,7 +565,7 @@ function makeApi(bot, dt) {
     turn: (deg) => doTurn(bot, deg, tpsScale),
     advance: (power) => doAdvance(bot, power, tpsScale),
     fire: () => doFire(bot),
-    aligned: (angleDeg, toleranceDeg) => doAligned(bot, angleDeg, toleranceDeg),
+    aligned: (targetOrAngle, toleranceDeg) => doAligned(bot, targetOrAngle, toleranceDeg),
     memoryGet: (slot) => getMemory(bot, slot),
     memorySet: (slot, value) => setMemory(bot, slot, value),
     getState: () => ({
@@ -563,6 +580,11 @@ function makeApi(bot, dt) {
 }
 
 function doScan(bot, fovDeg) {
+  if (bot.scanCooldown > 0) {
+    warnBot(bot, "scan-cooldown", "scan() can only be used once per tick.");
+    return { found: false };
+  }
+  bot.scanCooldown = 1;
   trackAction(bot, "scan");
   let usedFov = fovDeg;
   if (usedFov === undefined) {
@@ -623,14 +645,21 @@ function doFire(bot) {
     return;
   }
   trackAction(bot, "fire");
-  bot.fireCmd = { power: bot.stats.shotPower, speed: bot.stats.shotSpeed };
+  bot.fireCmd = { power: bot.stats.shotPower, rangeTier: bot.stats.shotRange };
   bot.statsData.shotsFired += 1;
   bot.fireCooldown = FIRE_COOLDOWN_TICKS;
 }
 
-function doAligned(bot, angleDeg, toleranceDeg) {
+function doAligned(bot, targetOrAngle, toleranceDeg) {
+  let angleDeg = targetOrAngle;
+  if (targetOrAngle && typeof targetOrAngle === "object") {
+    if (targetOrAngle.found === false) {
+      return false;
+    }
+    angleDeg = targetOrAngle.angle;
+  }
   if (!Number.isFinite(angleDeg)) {
-    warnBot(bot, "aligned-nan", "aligned(angle) needs a number.");
+    warnBot(bot, "aligned-nan", "aligned(target, tolerance) needs a scan result or an angle.");
     return false;
   }
   let tolerance = toleranceDeg;
@@ -773,7 +802,7 @@ function resolveShots() {
     if (!bot.alive || bot.disabled || !bot.fireCmd) {
       return;
     }
-    const range = 140 + bot.fireCmd.speed * 60;
+    const range = 140 + bot.fireCmd.rangeTier * 60;
     const hit = raycastBot(bot, range);
     recordShotEffect(bot, hit, range);
     if (hit) {
@@ -1268,7 +1297,7 @@ function calculateBuildPoints(build) {
     getCost(costs.sightRange, build.sightRangeTier) +
     getCost(costs.sightFov, build.sightFovTier) +
     getCost(costs.shotPower, build.shotPowerTier) +
-    getCost(costs.shotSpeed, build.shotSpeedTier) +
+    getCost(costs.shotRange, build.shotRangeTier) +
     getCost(costs.maxHealth, build.maxHealthTier) +
     getCost(costs.memorySlots, build.memoryTier) +
     (costs.wallBehavior[build.wallBehavior] ?? 0);
@@ -1361,7 +1390,7 @@ function validateBuildRanges(build) {
     { key: "sightRangeTier", min: 1, max: tiers.sightRange.length },
     { key: "sightFovTier", min: 1, max: tiers.sightFov.length },
     { key: "shotPowerTier", min: 1, max: tiers.shotPower.length },
-    { key: "shotSpeedTier", min: 1, max: tiers.shotSpeed.length },
+    { key: "shotRangeTier", min: 1, max: tiers.shotRange.length },
     { key: "maxHealthTier", min: 1, max: tiers.maxHealth.length },
     { key: "memoryTier", min: 0, max: tiers.memorySlots.length - 1 },
   ];
@@ -1436,8 +1465,8 @@ function evaluateBotConfig(config) {
   }
 
   const points = calculateBuildPoints(config.build);
-  if (points.total > 100) {
-    return { ok: false, name, detail: "Point budget exceeded: " + points.total + "/100." };
+  if (points.total > match.budget) {
+    return { ok: false, name, detail: "Point budget exceeded: " + points.total + "/" + match.budget + "." };
   }
 
   const tickErrors = validateTickSource(config);

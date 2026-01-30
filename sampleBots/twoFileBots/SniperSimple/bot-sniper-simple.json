@@ -7,7 +7,7 @@
     "sightRangeTier": 4,
     "sightFovTier": 2,
     "shotPowerTier": 4,
-    "shotSpeedTier": 4,
+    "shotRangeTier": 4,
     "maxHealthTier": 2,
     "memoryTier": 1,
     "wallBehavior": "stop"

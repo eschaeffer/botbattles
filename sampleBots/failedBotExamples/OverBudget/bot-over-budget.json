@@ -7,7 +7,7 @@
     "sightRangeTier": 4,
     "sightFovTier": 4,
     "shotPowerTier": 5,
-    "shotSpeedTier": 5,
+    "shotRangeTier": 5,
     "maxHealthTier": 5,
     "memoryTier": 4,
     "wallBehavior": "slide"

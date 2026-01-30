@@ -45,11 +45,11 @@ Two supported paths:
 
 ## Bot API (current)
 Inside `tick(api)`:
-- `scan(fovDeg=MAX)` → `{found, distance, angle, id}` or `{found:false}`
+- `scan(fovDeg=MAX)` → `{found, distance, angle, id}` or `{found:false}` (once per tick)
 - `turn(deg)`
 - `advance(power=1)` (0..1, default 1)
 - `fire()` (hitscan, max power/speed per tiers)
-- `aligned(angleDeg, toleranceDeg=6)` → boolean
+- `aligned(targetOrAngle, toleranceDeg=6)` → boolean
 - `memoryGet(slot)` / `memorySet(slot, value)` → numeric memory slots
 - `getState()` → `{x, y, heading, health, time, alive}`
 
@@ -62,11 +62,12 @@ Notes:
 - No energy system; health only.
 - Shots reduce health; dead at 0.
 - Fire cooldown: 1 tick.
+- Scan is limited to once per tick.
 - Stop wall behavior stuns bot for 2 ticks; 3‑tick immunity afterward.
 - Spawn system: 8 possible spawn points (corners + side midpoints), randomized per match, all facing center.
 - Scan cone visual: translucent pulse.
 - Shot visual: tracer line + spark.
-- TPS slider scales entire sim speed + clock.
+- Sim Speed (TPS) slider scales entire sim speed + clock.
 - Scoring: weighted sum of health, damage (accuracy‑weighted), engagement time, distance (capped).
 - Normalize Scores toggle: off / strict / gentle.
 - Bot status highlighting: WARN/ERR now reflected in Bot Load Report and Scoreboard.
@@ -91,7 +92,7 @@ Normalize options:
 Tiers and costs live in `spec.md`. Current key tiers:
 - Max speed (1–5), turn rate (1–5)
 - Sight range (1–4), sight FOV (1–4)
-- Shot power (1–5), shot speed (1–5)
+- Shot power (1–5), shot range (1–5)
 - Max health (1–5)
 - Memory tier (0–4 slots)
 - Wall behavior: stop/bounce/slide
@@ -104,9 +105,10 @@ Memory tier cost: [0,3,7,12,18]; slots: [0,1,2,3,4]
 - Reset Match
 - Start Battle (disabled until bots reloaded)
 - Load Bots panel (`Select Bot Folders` + `Clear Loaded`)
+- Build Budget selector (100..200, step 20)
 - Normalize Scores (off/strict/gentle)
 - Match End On (timer/last bot standing)
-- TPS slider
+- Sim Speed slider
 
 ## Bot Examples
 Located in `sampleBots/`:

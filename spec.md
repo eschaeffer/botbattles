@@ -13,7 +13,7 @@
 - Rendering: runs at display frame rate (target 60 FPS).
 - One action per tick (turn, advance, scan, fire). Actions apply instantly to the tick.
 - Visuals interpolate between ticks for smooth motion.
-- UI controls: pause, step, and TPS selector.
+- UI controls: pause, step, and Sim Speed selector.
 - Costs scale by tick duration so behavior is consistent when TPS changes.
 
 ## Bot API (student-facing)
@@ -24,7 +24,7 @@ function tick(api) {
 ```
 
 API methods:
-- `api.scan(fovDeg=MAX)`
+- `api.scan(fovDeg=MAX)` (once per tick)
   - Returns `{ found, distance, angle, id }` or `{ found:false }`.
 - `api.turn(deg)`
   - Sets desired turn for this tick; clamped to bot's max turn rate.
@@ -33,7 +33,7 @@ API methods:
 - `api.fire()`
 - `api.getState()`
   - Read-only: `{ x, y, heading, health, time, alive }`.
-- `api.aligned(angleDeg, toleranceDeg=6)`
+- `api.aligned(targetOrAngle, toleranceDeg=6)`
   - Returns `true` if an angle is within tolerance.
 
 ## Hitscan weapon
@@ -46,8 +46,9 @@ API methods:
 - Bounce: reflect heading and apply speed penalty.
 - Slide: movement becomes tangential to wall (higher cost, more advanced).
 
-## Build points (100 total)
-Choose one tier per category. Total points must be <= 100.
+## Build points (budgeted)
+Choose one tier per category. Total points must be <= the selected budget.
+Budget is selectable in the UI (100..200 in steps of 20).
 
 ### Core movement
 | Stat | Tier values | Tier costs |
@@ -65,7 +66,7 @@ Choose one tier per category. Total points must be <= 100.
 | Stat | Tier values | Tier costs |
 | --- | --- | --- |
 | Shot power (damage) | 1, 2, 3, 4, 5 | 0, 6, 14, 24, 36 |
-| Shot speed | 1, 2, 3, 4, 5 | 0, 4, 10, 18, 28 |
+| Shot range | 1, 2, 3, 4, 5 | 0, 4, 10, 18, 28 |
 
 ### Health
 | Stat | Tier values | Tier costs |
@@ -88,7 +89,7 @@ Choose one tier per category. Total points must be <= 100.
 - Sight range 200 px
 - Sight FOV 90 deg
 - Shot power 2
-- Shot speed 2
+- Shot range 2
 - Max health 100
 - Memory slots 0
 
