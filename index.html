@@ -387,6 +387,16 @@
         font-weight: 700;
       }
 
+      .splash-doc-link {
+        color: var(--accent-2);
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .splash-doc-link:hover {
+        text-decoration: underline;
+      }
+
       .splash-steps {
         margin: 0;
         padding-left: 18px;
@@ -501,8 +511,9 @@
           <li>Click <span class="splash-highlight">&lt;Select Bot Folders&gt;</span> and choose the unzipped parent folder (lameBots).</li>
           <li>Check the Bot Load Report for errors or warnings.</li>
           <li>Click <span class="splash-highlight">&lt;Start Battle&gt;</span> to begin.</li>
-          <li>Want better bots? That’s up to <span class="splash-highlight">&lt;you&gt;</span>.</li>
         </ol>
+        <p>Want better bots? That’s up to <span class="splash-highlight">&lt;you&gt;</span>.</p>
+        <p>See the <a class="splash-doc-link" href="documentation.html">documentation</a> for more detailed information about the BotBattles system.</p>
         <div class="splash-actions">
           <a class="secondary" href="sampleBots/lameBots.zip" download>Download Lame Bots (ZIP)</a>
           <button id="splash-close">Got it, start</button>
