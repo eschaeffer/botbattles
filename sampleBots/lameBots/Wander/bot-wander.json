@@ -1,0 +1,14 @@
+﻿{
+  "name": "Wander",
+  "build": {
+    "maxSpeedTier": 2,
+    "turnRateTier": 2,
+    "sightRangeTier": 1,
+    "sightFovTier": 1,
+    "shotPowerTier": 1,
+    "shotRangeTier": 1,
+    "maxHealthTier": 2,
+    "memoryTier": 0,
+    "wallBehavior": "stop"
+  }
+}

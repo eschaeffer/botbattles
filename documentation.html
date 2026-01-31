@@ -1,0 +1,177 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BotBattles Documentation</title>
+    <style>
+      :root {
+        --bg: #0c1014;
+        --bg-2: #141a20;
+        --card: rgba(255, 255, 255, 0.06);
+        --card-2: rgba(255, 255, 255, 0.02);
+        --line: rgba(255, 255, 255, 0.12);
+        --fg: #eef2f6;
+        --muted: #a7b1bc;
+        --accent: #f2b84b;
+        --accent-2: #7fd1ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Futura", "Optima", "Segoe UI", sans-serif;
+        color: var(--fg);
+        background:
+          radial-gradient(800px 400px at 10% 20%, rgba(127, 209, 255, 0.18), transparent 60%),
+          radial-gradient(600px 600px at 90% 10%, rgba(242, 184, 75, 0.15), transparent 60%),
+          linear-gradient(160deg, var(--bg) 20%, var(--bg-2) 100%);
+        padding: 32px 24px 48px;
+      }
+
+      main {
+        width: min(900px, 96vw);
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+      }
+
+      header {
+        display: grid;
+        gap: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 2.6rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .doc-section {
+        display: grid;
+        gap: 12px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: linear-gradient(160deg, rgba(22, 28, 36, 0.9), rgba(18, 20, 24, 0.9));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .doc-section h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent-2);
+      }
+
+      .doc-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .doc-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: linear-gradient(140deg, var(--card), var(--card-2));
+        border: 1px solid var(--line);
+      }
+
+      .doc-card h3 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      a {
+        color: var(--fg);
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: var(--accent);
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--fg);
+        background: transparent;
+        font-weight: 600;
+        text-decoration: none;
+        width: fit-content;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>BotBattles Documentation</h1>
+        <p>Teacher and student references (PDF).</p>
+        <a class="back-link" href="index.html">← Back to Arena</a>
+      </header>
+
+      <section class="doc-section">
+        <h2>Getting Started</h2>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <h3>Getting Started</h3>
+            <ul>
+              <li><a href="docs/pdfs/BotBattles - Welcome to BotBattles.pdf">Welcome to BotBattles</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>Student Docs</h2>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <h3>Student</h3>
+            <ul>
+              <li><a href="docs/pdfs/BotBattles - Student Quickstart.pdf">Student Quickstart</a></li>              
+              <li><a href="docs/pdfs/BotBattles - Student Build and Tuning Guide.pdf">Student Build and Tuning Guide</a></li>
+              <li><a href="docs/pdfs/BotBattles - Student API Cheatsheet.pdf">Student API Cheatsheet</a></li>
+              <li><a href="docs/pdfs/BotBattles - Student Troubleshooter.pdf">Student Troubleshooter</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>Teacher Docs</h2>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <h3>Teacher</h3>
+            <ul>
+              <li><a href="docs/pdfs/BotBattles - Teacher Quickstart.pdf">Teacher Quickstart</a></li>
+              <li><a href="docs/pdfs/BotBattles - Teacher Reference_ Controls, Settings & Scoring.pdf">Teacher Reference: Controls, Settings &amp; Scoring</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

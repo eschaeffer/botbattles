@@ -31,8 +31,10 @@
           radial-gradient(600px 600px at 90% 10%, rgba(242, 184, 75, 0.15), transparent 60%),
           linear-gradient(160deg, var(--bg) 20%, var(--bg-2) 100%);
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
+        gap: 18px;
         padding: 24px;
       }
 
@@ -40,6 +42,51 @@
         width: min(1200px, 96vw);
         display: grid;
         gap: 18px;
+      }
+
+      #docs-section {
+        width: min(1200px, 96vw);
+        margin: 0 auto 24px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .docs-card {
+        width: 100%;
+        padding: 16px 18px;
+        border-radius: 16px;
+        background: linear-gradient(140deg, var(--card), var(--card-2));
+        border: 1px solid var(--line);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        justify-content: space-between;
+      }
+
+      .docs-card h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .docs-card p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .docs-link {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 9px 14px;
+        font-weight: 600;
+        background: transparent;
+        color: var(--fg);
+        border: 1px solid var(--line);
       }
 
       header {
@@ -238,7 +285,8 @@
         color: var(--muted);
       }
 
-      button {
+      button,
+      .download-link {
         appearance: none;
         border: none;
         border-radius: 999px;
@@ -254,6 +302,20 @@
         background: transparent;
         color: var(--fg);
         border: 1px solid var(--line);
+      }
+
+      .download-link {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: var(--fg);
+        border: 1px solid var(--line);
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.2;
       }
 
       .pulse-attention {
@@ -274,7 +336,8 @@
         }
       }
 
-      button:hover {
+      button:hover,
+      .download-link:hover {
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(242, 184, 75, 0.2);
       }
@@ -282,6 +345,121 @@
       .pause-button {
         min-width: 92px;
         text-align: center;
+      }
+
+      #splash {
+        position: fixed;
+        inset: 0;
+        background: rgba(6, 10, 14, 0.86);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        z-index: 10;
+      }
+
+      #splash.splash-hidden {
+        display: none;
+      }
+
+      .splash-card {
+        width: min(720px, 92vw);
+        background: linear-gradient(160deg, rgba(24, 30, 38, 0.95), rgba(14, 18, 22, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        padding: 24px;
+        display: grid;
+        gap: 16px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      }
+
+      .splash-card h2 {
+        margin: 0;
+        font-size: 1.6rem;
+        letter-spacing: 0.04em;
+      }
+
+      .splash-card p {
+        color: var(--muted);
+      }
+
+      .splash-highlight {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .splash-steps {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--fg);
+        line-height: 1.5;
+      }
+
+      .splash-substeps {
+        margin: 8px 0 0;
+        padding-left: 18px;
+        color: var(--muted);
+      }
+
+      .splash-substeps li {
+        margin-bottom: 4px;
+      }
+
+      .splash-tree {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(10, 14, 18, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        font-family: "Cascadia Mono", "Consolas", monospace;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+
+      .splash-tree strong {
+        color: var(--accent-2);
+        display: inline-block;
+        animation: splashGlow 1.8s ease-in-out infinite;
+        font-size: 1.15rem;
+      }
+
+      @keyframes splashGlow {
+        0% {
+          text-shadow: 0 0 0 rgba(127, 209, 255, 0.2);
+        }
+        50% {
+          text-shadow: 0 0 10px rgba(127, 209, 255, 0.9);
+        }
+        100% {
+          text-shadow: 0 0 0 rgba(127, 209, 255, 0.2);
+        }
+      }
+
+      .splash-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .splash-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 9px 14px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .splash-actions a.secondary {
+        background: transparent;
+        color: var(--fg);
+        border: 1px solid var(--line);
+      }
+
+      .show-splash {
+        white-space: nowrap;
       }
 
       @media (max-width: 900px) {
@@ -292,6 +470,45 @@
     </style>
   </head>
   <body>
+    <section id="splash" role="dialog" aria-modal="true" aria-labelledby="splash-title">
+      <div class="splash-card">
+        <h2 id="splash-title">Welcome to BotBattles</h2>
+        <p>Start with the sample “lame bots,” then improve them.</p>
+        <ol class="splash-steps">
+          <li>Download the lameBots.zip file below and unzip/extract it.
+            <ul class="splash-substeps">
+              <li>(Windows) Right click the zip file → Extract All → Extract.</li>
+              <li>(Mac) Double-click the zip file to unzip it.</li>
+              <li>(Linux) Use your file manager’s Extract option or `unzip` in terminal.</li>
+            </ul>
+          </li>
+          <li>Folder layout should look like this:</li>
+        </ol>
+        <pre class="splash-tree">
+<strong>lameBots/</strong>
+  Bump/
+    bot-bump.json
+    behavior.js
+  Drift/
+    bot-drift.json
+    behavior.js
+  Idle/
+    bot-idle.json
+    behavior.js
+  ...
+        </pre>
+        <ol class="splash-steps" start="3">
+          <li>Click <span class="splash-highlight">&lt;Select Bot Folders&gt;</span> and choose the unzipped parent folder (lameBots).</li>
+          <li>Check the Bot Load Report for errors or warnings.</li>
+          <li>Click <span class="splash-highlight">&lt;Start Battle&gt;</span> to begin.</li>
+          <li>Want better bots? That’s up to <span class="splash-highlight">&lt;you&gt;</span>.</li>
+        </ol>
+        <div class="splash-actions">
+          <a class="secondary" href="sampleBots/lameBots.zip" download>Download Lame Bots (ZIP)</a>
+          <button id="splash-close">Got it, start</button>
+        </div>
+      </div>
+    </section>
     <main>
       <header>
         <div>
@@ -318,6 +535,7 @@
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button id="local-folder-btn" class="secondary">Select Bot Folders</button>
               <button id="local-clear-btn" class="secondary">Clear Loaded</button>
+              <a class="secondary download-link" href="sampleBots/lameBots.zip" download>Download Lame Bots (ZIP)</a>
             </div>
             <input id="local-folder-input" type="file" webkitdirectory multiple hidden />
           </section>
@@ -328,8 +546,45 @@
         </aside>
       </section>
     </main>
+    <section id="docs-section">
+      <div class="docs-card">
+        <h2>Documentation</h2>
+        <p>Browse all teacher and student resources.</p>
+        <a class="secondary docs-link" href="documentation.html">Open Documentation</a>
+      </div>
+    </section>
 
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
     <script src="sketch.js?v=1"></script>
+    <script>
+      (function () {
+        const splash = document.getElementById("splash");
+        const closeBtn = document.getElementById("splash-close");
+        const controls = document.getElementById("controls");
+        let showBtn = null;
+        if (!splash) {
+          return;
+        }
+        const hide = () => {
+          splash.classList.add("splash-hidden");
+        };
+        const show = () => {
+          splash.classList.remove("splash-hidden");
+        };
+        closeBtn && closeBtn.addEventListener("click", hide);
+        splash.addEventListener("click", (event) => {
+          if (event.target === splash) {
+            hide();
+          }
+        });
+        if (controls) {
+          showBtn = document.createElement("button");
+          showBtn.textContent = "Show Welcome";
+          showBtn.className = "secondary show-splash";
+          showBtn.addEventListener("click", show);
+          controls.appendChild(showBtn);
+        }
+      })();
+    </script>
   </body>
 </html>
