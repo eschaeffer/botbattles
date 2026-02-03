@@ -55,6 +55,7 @@ const match = {
   accumulator: 0,
   tickCount: 0,
   lastWarningCheck: 0,
+  supportShown: false,
   lastWinner: null,
   hasStarted: false,
   isOver: false,
@@ -300,6 +301,7 @@ function resetMatch(options) {
   match.accumulator = 0;
   match.tickCount = 0;
   match.lastWarningCheck = 0;
+  match.supportShown = false;
   match.lastTickAt = millis();
   match.isOver = false;
   if (!keepPaused) {
@@ -829,6 +831,7 @@ function resolveSurvivalOutcome() {
     } else {
       logEvent("No bots remaining.");
     }
+    maybeShowSupportOverlay();
   }
 }
 
@@ -854,6 +857,19 @@ function resolveTimeOutcome() {
     if (!match.isSim) {
       logEvent("No bots remaining.");
     }
+  }
+  if (!match.isSim) {
+    maybeShowSupportOverlay();
+  }
+}
+
+function maybeShowSupportOverlay() {
+  if (match.supportShown) {
+    return;
+  }
+  match.supportShown = true;
+  if (typeof window !== "undefined" && typeof window.showSupportOverlay === "function") {
+    window.showSupportOverlay();
   }
 }
 
