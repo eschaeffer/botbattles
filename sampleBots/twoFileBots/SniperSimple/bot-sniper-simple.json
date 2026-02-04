@@ -1,0 +1,16 @@
+﻿{
+  "name": "SniperSimple",
+  "color": [255, 90, 90],
+  "build": {
+    "maxSpeedTier": 2,
+    "turnRateTier": 2,
+    "sightRangeTier": 4,
+    "sightFovTier": 2,
+    "shotPowerTier": 4,
+    "shotRangeTier": 4,
+    "maxHealthTier": 2,
+    "memoryTier": 1,
+    "wallBehavior": "stop"
+  },
+  "behavior": {}
+}

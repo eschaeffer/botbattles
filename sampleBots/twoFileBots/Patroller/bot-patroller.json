@@ -1,0 +1,16 @@
+﻿{
+  "name": "Patroller",
+  "color": [210, 120, 255],
+  "build": {
+    "maxSpeedTier": 3,
+    "turnRateTier": 3,
+    "sightRangeTier": 3,
+    "sightFovTier": 2,
+    "shotPowerTier": 3,
+    "shotRangeTier": 3,
+    "maxHealthTier": 3,
+    "memoryTier": 2,
+    "wallBehavior": "stop"
+  },
+  "behavior": {}
+}

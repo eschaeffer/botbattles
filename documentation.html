@@ -1,0 +1,377 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BotBattles Documentation</title>
+    <style>
+      :root {
+        --bg: #0c1014;
+        --bg-2: #141a20;
+        --card: rgba(255, 255, 255, 0.06);
+        --card-2: rgba(255, 255, 255, 0.02);
+        --line: rgba(255, 255, 255, 0.12);
+        --fg: #eef2f6;
+        --muted: #a7b1bc;
+        --accent: #f2b84b;
+        --accent-2: #7fd1ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Futura", "Optima", "Segoe UI", sans-serif;
+        color: var(--fg);
+        background:
+          radial-gradient(800px 400px at 10% 20%, rgba(127, 209, 255, 0.18), transparent 60%),
+          radial-gradient(600px 600px at 90% 10%, rgba(242, 184, 75, 0.15), transparent 60%),
+          linear-gradient(160deg, var(--bg) 20%, var(--bg-2) 100%);
+        padding: 32px 24px 48px;
+      }
+
+      main {
+        width: min(900px, 96vw);
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+      }
+
+      header {
+        display: grid;
+        gap: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 2.6rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .doc-section {
+        display: grid;
+        gap: 12px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: linear-gradient(160deg, rgba(22, 28, 36, 0.9), rgba(18, 20, 24, 0.9));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .doc-section h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent-2);
+      }
+
+      .doc-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .doc-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: linear-gradient(140deg, var(--card), var(--card-2));
+        border: 1px solid var(--line);
+      }
+
+      .doc-card h3 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      a {
+        color: var(--fg);
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: var(--accent);
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--fg);
+        background: transparent;
+        font-weight: 600;
+        text-decoration: none;
+        width: fit-content;
+      }
+
+      details.help-panel {
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: linear-gradient(160deg, rgba(22, 28, 36, 0.9), rgba(18, 20, 24, 0.9));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      details.help-panel summary {
+        cursor: pointer;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+        outline: none;
+      }
+
+      .help-panel-body {
+        margin-top: 12px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .help-panel-body p {
+        color: var(--muted);
+      }
+
+      .help-status {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .help-chat {
+        display: grid;
+        gap: 10px;
+      }
+
+      .help-messages {
+        min-height: 140px;
+        max-height: 280px;
+        overflow-y: auto;
+        background: rgba(10, 14, 18, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .help-message {
+        margin-bottom: 10px;
+      }
+
+      .help-message strong {
+        color: var(--accent-2);
+      }
+
+      .help-input {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(8, 12, 16, 0.8);
+        color: var(--fg);
+        padding: 10px 12px;
+        font-size: 0.95rem;
+      }
+
+      .help-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .help-actions button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 9px 14px;
+        font-weight: 600;
+        background: var(--accent);
+        color: #1a1a1a;
+        cursor: pointer;
+      }
+
+      .help-actions button.secondary {
+        background: transparent;
+        color: var(--fg);
+        border: 1px solid var(--line);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>BotBattles Documentation</h1>
+        <p>Teacher and student references (PDF).</p>
+        <a class="back-link" href="index.html">← Back to Arena</a>
+      </header>
+
+      <details class="help-panel" open>
+        <summary>Teacher Help Chatbot</summary>
+        <div class="help-panel-body">
+          <p>Teacher-only help for setup, troubleshooting, and lesson planning. This does not generate full bot solutions.</p>
+          <div class="help-status" id="help-status">Checking availability…</div>
+          <div class="help-chat">
+            <div class="help-messages" id="help-messages"></div>
+            <input class="help-input" id="help-passphrase" type="password" placeholder="Teacher passphrase" />
+            <textarea class="help-input" id="help-input" rows="3" placeholder="Ask a teacher-level question…"></textarea>
+            <div class="help-actions">
+              <button id="help-send">Send</button>
+              <button class="secondary" id="help-clear">Clear</button>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <section class="doc-section">
+        <h2>Getting Started</h2>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <h3>Getting Started</h3>
+            <ul>
+              <li><a href="docs/pdfs/BotBattles - Welcome to BotBattles.pdf">Welcome to BotBattles</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>Student Docs</h2>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <h3>Student</h3>
+            <ul>
+              <li><a href="docs/pdfs/BotBattles - Student Quickstart.pdf">Student Quickstart</a></li>              
+              <li><a href="docs/pdfs/BotBattles - Student Build and Tuning Guide.pdf">Student Build and Tuning Guide</a></li>
+              <li><a href="docs/pdfs/BotBattles - Student API Cheatsheet.pdf">Student API Cheatsheet</a></li>
+              <li><a href="docs/pdfs/BotBattles - Student Troubleshooter.pdf">Student Troubleshooter</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>Teacher Docs</h2>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <h3>Teacher</h3>
+            <ul>
+              <li><a href="docs/pdfs/BotBattles - Teacher Quickstart.pdf">Teacher Quickstart</a></li>
+              <li><a href="docs/pdfs/BotBattles - Teacher Reference_ Controls, Settings & Scoring.pdf">Teacher Reference: Controls, Settings &amp; Scoring</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      window.BOTBATTLES_HELP = {
+        endpoint: "https://botbattles-help.ebenschaeffer.workers.dev/chat",
+        allowedHosts: ["eschaeffer.github.io"],
+      };
+    </script>
+    <script>
+      (function () {
+        const config = window.BOTBATTLES_HELP || {};
+        const statusEl = document.getElementById("help-status");
+        const messagesEl = document.getElementById("help-messages");
+        const passphraseEl = document.getElementById("help-passphrase");
+        const inputEl = document.getElementById("help-input");
+        const sendBtn = document.getElementById("help-send");
+        const clearBtn = document.getElementById("help-clear");
+        const allowed = (config.allowedHosts || []).includes(window.location.hostname);
+
+        const setStatus = (text) => {
+          if (statusEl) {
+            statusEl.textContent = text;
+          }
+        };
+
+        const appendMessage = (role, text) => {
+          if (!messagesEl) {
+            return;
+          }
+          const div = document.createElement("div");
+          div.className = "help-message";
+          div.innerHTML = `<strong>${role}:</strong> ${text}`;
+          messagesEl.appendChild(div);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        };
+
+        const clearMessages = () => {
+          if (messagesEl) {
+            messagesEl.innerHTML = "";
+          }
+        };
+
+        if (!allowed) {
+          setStatus("Chatbot is disabled on this host.");
+          sendBtn && (sendBtn.disabled = true);
+          inputEl && (inputEl.disabled = true);
+          passphraseEl && (passphraseEl.disabled = true);
+          return;
+        }
+
+        if (!config.endpoint || config.endpoint.includes("YOUR-WORKER-URL")) {
+          setStatus("Chatbot is not configured yet. Add your Worker URL.");
+          sendBtn && (sendBtn.disabled = true);
+          inputEl && (inputEl.disabled = true);
+          passphraseEl && (passphraseEl.disabled = true);
+          return;
+        }
+
+        setStatus("Chatbot ready.");
+
+        sendBtn && sendBtn.addEventListener("click", async () => {
+          const prompt = inputEl ? inputEl.value.trim() : "";
+          const pass = passphraseEl ? passphraseEl.value.trim() : "";
+          if (!prompt) {
+            return;
+          }
+          appendMessage("You", prompt);
+          inputEl.value = "";
+          setStatus("Thinking…");
+          try {
+            const resp = await fetch(config.endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                passphrase: pass,
+                message: prompt,
+              }),
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data || !data.reply) {
+              const errText = data && data.error ? data.error : "Request failed.";
+              appendMessage("Bot", errText);
+              setStatus("Chatbot error.");
+              return;
+            }
+            appendMessage("Bot", data.reply);
+            setStatus("Chatbot ready.");
+          } catch (err) {
+            appendMessage("Bot", "Request failed. Check the connection.");
+            setStatus("Chatbot error.");
+          }
+        });
+
+        clearBtn && clearBtn.addEventListener("click", clearMessages);
+      })();
+    </script>
+  </body>
+</html>

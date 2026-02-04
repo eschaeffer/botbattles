@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BotBattles Bot Config",
+  "type": "object",
+  "required": ["name", "build", "behavior"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "color": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "maxSpeedTier",
+        "turnRateTier",
+        "sightRangeTier",
+        "sightFovTier",
+        "shotPowerTier",
+        "shotRangeTier",
+        "maxHealthTier",
+        "memoryTier",
+        "wallBehavior"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maxSpeedTier": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "turnRateTier": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "sightRangeTier": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "sightFovTier": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "shotPowerTier": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "shotRangeTier": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "maxHealthTier": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "memoryTier": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "wallBehavior": {
+          "type": "string",
+          "enum": ["stop", "bounce", "slide"]
+        }
+      }
+    },
+    "behavior": {
+      "type": "object",
+      "required": ["tick"],
+      "additionalProperties": false,
+      "properties": {
+        "tick": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
