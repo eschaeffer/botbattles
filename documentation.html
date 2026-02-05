@@ -222,22 +222,6 @@
         <a class="back-link" href="index.html">← Back to Arena</a>
       </header>
 
-      <details class="help-panel" open>
-        <summary>Teacher Help Chatbot</summary>
-        <div class="help-panel-body">
-          <p>Teacher-only help for setup, troubleshooting, and lesson planning. This does not generate full bot solutions.</p>
-          <div class="help-status" id="help-status">Checking availability…</div>
-          <div class="help-chat">
-            <div class="help-messages" id="help-messages"></div>
-            <input class="help-input" id="help-passphrase" type="password" placeholder="Teacher passphrase" />
-            <textarea class="help-input" id="help-input" rows="3" placeholder="Ask a teacher-level question…"></textarea>
-            <div class="help-actions">
-              <button id="help-send">Send</button>
-              <button class="secondary" id="help-clear">Clear</button>
-            </div>
-          </div>
-        </div>
-      </details>
 
       <section class="doc-section">
         <h2>Getting Started</h2>
@@ -278,6 +262,23 @@
           </div>
         </div>
       </section>
+
+      <details class="help-panel" open>
+        <summary>Teacher Help Chatbot</summary>
+        <div class="help-panel-body">
+          <p>Teacher-only help for setup, troubleshooting, and lesson planning. This does not generate full bot solutions.</p>
+          <div class="help-status" id="help-status">Checking availability…</div>
+          <div class="help-chat">
+            <div class="help-messages" id="help-messages"></div>
+            <input class="help-input" id="help-passphrase" type="password" placeholder="Teacher passphrase" />
+            <textarea class="help-input" id="help-input" rows="3" placeholder="Ask a teacher-level question…"></textarea>
+            <div class="help-actions">
+              <button id="help-send">Send</button>
+              <button class="secondary" id="help-clear">Clear</button>
+            </div>
+          </div>
+        </div>
+      </details>
     </main>
     <script>
       window.BOTBATTLES_HELP = {
@@ -362,7 +363,7 @@
 
         setStatus("Chatbot ready.");
 
-        sendBtn && sendBtn.addEventListener("click", async () => {
+        const sendMessage = async () => {
           const prompt = inputEl ? inputEl.value.trim() : "";
           const pass = passphraseEl ? passphraseEl.value.trim() : "";
           if (!prompt) {
@@ -392,6 +393,14 @@
           } catch (err) {
             appendMessage("Bot", "Request failed. Check the connection.");
             setStatus("Chatbot error.");
+          }
+        };
+
+        sendBtn && sendBtn.addEventListener("click", sendMessage);
+        inputEl && inputEl.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
           }
         });
 
