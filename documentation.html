@@ -302,13 +302,38 @@
           }
         };
 
+        const renderMarkdown = (raw) => {
+          const safe = String(raw || "");
+          const parts = safe.split("```");
+          let html = "";
+          parts.forEach((part, index) => {
+            if (index % 2 === 1) {
+              const trimmed = part.replace(/^\w+\n/, "");
+              html += `<pre><code>${trimmed
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")}</code></pre>`;
+            } else {
+              let text = part
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+              text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+              text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+              text = text.replace(/\n/g, "<br />");
+              html += text;
+            }
+          });
+          return html;
+        };
+
         const appendMessage = (role, text) => {
           if (!messagesEl) {
             return;
           }
           const div = document.createElement("div");
           div.className = "help-message";
-          div.innerHTML = `<strong>${role}:</strong> ${text}`;
+          div.innerHTML = `<strong>${role}:</strong> ${renderMarkdown(text)}`;
           messagesEl.appendChild(div);
           messagesEl.scrollTop = messagesEl.scrollHeight;
         };

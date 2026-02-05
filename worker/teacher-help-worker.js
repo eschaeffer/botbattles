@@ -86,9 +86,18 @@
       });
     }
 
+    const botBattlesContext =
+      "BotBattles context (v1): Bots are AI-vs-AI in a p5.js arena. Bots are loaded from local folders via UI; each bot folder has a .json config + behavior.js. " +
+      "Config build tiers: maxSpeedTier 1-5, turnRateTier 1-5, sightRangeTier 1-4, sightFovTier 1-4, shotPowerTier 1-5, shotRangeTier 1-5, maxHealthTier 1-5, memoryTier 0-4, wallBehavior stop/bounce/slide. " +
+      "API inside tick(api): scan(fovDeg=MAX) once per tick, turn(deg), advance(power=0..1), fire() (1 tick cooldown), aligned(targetOrAngle, toleranceDeg=6), memoryGet/Set (numeric slots), getState() -> {x,y,heading,health,time,alive}. " +
+      "Scoring: weighted health + damage (accuracy weighted) + engagement time + distance (capped). " +
+      "Match end: timer or last bot standing. Spawn points: 8 positions randomized per match. " +
+      "Teacher help should avoid writing full bot solutions; give guidance, troubleshooting, and teaching tips.";
+
     const systemPrompt =
       "You are the Teacher Help Chatbot for BotBattles. Provide high-level guidance, troubleshooting, and teaching tips. " +
-      "Do not write full bot solutions. Encourage learning and experimentation.";
+      "Do not write full bot solutions. Encourage learning and experimentation. " +
+      botBattlesContext;
 
     const body = {
       model: env.DEEPSEEK_MODEL || "deepseek-chat",
